@@ -44,6 +44,30 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:3001
 npm run build
 ```
 
-Untuk alur end-to-end manual, lihat `docs/e2e-checklist.md`.
+## Unit Testing dan Coverage
 
+```bash
+npm run test
+npm run test:cov
+```
+
+Coverage frontend saat ini dilaporkan oleh Vitest ke folder `coverage/` dengan
+reporter `text`, `text-summary`, `json-summary`, dan `lcov`.
+
+Snapshot coverage FE terbaru:
+
+- Statements: `92.08%`
+- Branches: `82.65%`
+- Functions: `96.42%`
+- Lines: `99.17%`
+
+Scope coverage frontend saat ini difokuskan pada lapisan unit yang paling stabil
+untuk integrasi aplikasi:
+
+- `src/app/lib/auth.ts`
+- `src/app/lib/api.ts`
+- `src/app/lib/schemas.ts`
+- `src/app/lib/types.ts`
+
+Untuk alur end-to-end manual, lihat `docs/e2e-checklist.md`.
 

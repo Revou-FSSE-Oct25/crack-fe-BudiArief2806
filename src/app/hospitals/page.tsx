@@ -2,6 +2,7 @@
 
 // Halaman pemilihan rumah sakit.
 // Flow utamanya: ambil master data rumah sakit/dokter/ruangan, lalu kirim booking baru ke backend.
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/app/components/Navbar";
@@ -49,6 +50,20 @@ function initials(name: string) {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() ?? "")
     .join("");
+}
+
+function hospitalImageSrc(hospitalId: string) {
+  if (hospitalId === "primaya-lu") return "/primaya.png";
+  if (hospitalId === "thb") return "/thb2.png";
+  return "/thb2.png";
+}
+
+function hospitalImageClass(hospitalId: string) {
+  if (hospitalId === "thb") {
+    return "object-contain p-3 transition duration-500 hover:scale-[1.01]";
+  }
+
+  return "object-cover transition duration-500 hover:scale-[1.02]";
 }
 
 function buildHospitals(hospitals: HospitalRecord[], doctors: DoctorRecord[]): Hospital[] {
@@ -330,12 +345,12 @@ export default function HospitalsPage() {
             <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
               {isAdmin
                 ? "Bantu pasien daftar langsung ke rumah sakit, dokter, dan ruangan."
-                : "Pilih rumah sakit, dokter, dan ruangan dari backend resmi."}
+                : "Pilih rumah sakit, dokter, dan ruangan yang paling tepat untuk kebutuhan Anda."}
             </h1>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">
               {isAdmin
-                ? "Admin bisa memilih rumah sakit, dokter, ruangan, lalu mengisi data pasien walk-in sebelum mengirim pendaftaran ke backend resmi."
-                : "Halaman ini membaca `GET /hospitals`, `GET /doctors`, dan `GET /rooms?doctorId=...`, lalu membuat booking dengan `POST /bookings`."}
+                ? "Pendaftaran."
+                : "Hy,Segera lakukan booking untuk mendapatkan dokter spesialis yang tepat sesuai dengan keluhan yang Anda alami."}
             </p>
 
             {error ? (
@@ -478,7 +493,19 @@ export default function HospitalsPage() {
                         : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
                     )}
                   >
-                    <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="overflow-hidden rounded-[1.2rem]">
+                      <div className={cls("relative h-44 w-full", item.id === "thb" && "bg-white")}>
+                        <Image
+                          src={hospitalImageSrc(item.id)}
+                          alt={item.name}
+                          fill
+                          className={hospitalImageClass(item.id)}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/55 via-slate-950/10 to-transparent" />
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap items-start justify-between gap-3">
                       <div>
                         <div className="text-lg font-black text-slate-950">{item.name}</div>
                         <div className="mt-1 text-sm text-slate-600">

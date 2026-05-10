@@ -22,6 +22,24 @@ function fmtDateTime(iso: string) {
   )}`;
 }
 
+const diabetesMedicines = [
+  { name: "Glucophage 500 Mg 10 Tablet", price: 31500 },
+  { name: "Amaryl 1 Mg 10 Tablet", price: 62381 },
+  { name: "Metformin Tablet Hexpharm", price: 25000 },
+  { name: "Kombiglyze XR 5 Mg/500 Mg 7 Tablet", price: 220120 },
+  { name: "Acarbose 50 Mg 10 Tablet Dexa Medica", price: 21000 },
+  { name: "Glibenclamide 5 Mg 10 Tablet Kimia Farma", price: 16500 },
+  { name: "Forbetes 500 mg 10 Tablet", price: 24350 },
+];
+
+function formatRupiah(value: number) {
+  return `Rp${value.toLocaleString("id-ID")}`;
+}
+
+function medicineLine(medicine: { name: string; price: number }) {
+  return `${medicine.name} - ${formatRupiah(medicine.price)}`;
+}
+
 function StatusBadge({ status }: { status: BookingStatus }) {
   const cfg =
     status === "PENDING"
@@ -134,6 +152,35 @@ export default function DoctorBookingsPage() {
     if (!healthAdvice.trim()) {
       setHealthAdvice(template.notes);
     }
+  }
+
+  function selectedMedicineNames() {
+    return rxText
+      .split("\n")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  function syncEstimatedMedicineCost(lines: string[]) {
+    const total = diabetesMedicines
+      .filter((medicine) => lines.some((line) => line.includes(medicine.name)))
+      .reduce((sum, medicine) => sum + medicine.price, 0);
+
+    if (total > 0) {
+      setEstimatedCost(String(total));
+    }
+  }
+
+  function toggleMedicine(medicine: { name: string; price: number }) {
+    const line = medicineLine(medicine);
+    const currentLines = selectedMedicineNames();
+    const exists = currentLines.some((item) => item.includes(medicine.name));
+    const nextLines = exists
+      ? currentLines.filter((item) => !item.includes(medicine.name))
+      : [...currentLines, line];
+
+    setRxText(nextLines.join("\n"));
+    syncEstimatedMedicineCost(nextLines);
   }
 
   async function saveReview(booking: Booking) {
@@ -427,6 +474,49 @@ export default function DoctorBookingsPage() {
 
                         <div className="sm:col-span-12">
                           <div className="text-xs font-semibold text-slate-700">Daftar obat</div>
+                          {booking.specialty === "Diabetes" ? (
+                            <div className="mt-2 rounded-2xl border border-indigo-100 bg-indigo-50/40 p-3">
+                              <div className="flex flex-wrap items-center justify-between gap-2">
+                                <div>
+                                  <div className="text-xs font-bold text-indigo-900">Pilihan obat diabetes</div>
+                                  <div className="mt-1 text-xs text-indigo-700">
+                                    Klik obat untuk memasukkan atau menghapus dari daftar resep. Harga ikut dikirim ke admin.
+                                  </div>
+                                </div>
+                                <div className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-100">
+                                  Total otomatis
+                                </div>
+                              </div>
+
+                              <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+                                {diabetesMedicines.map((medicine) => {
+                                  const selected = rxText.includes(medicine.name);
+
+                                  return (
+                                    <button
+                                      key={medicine.name}
+                                      type="button"
+                                      onClick={() => toggleMedicine(medicine)}
+                                      className={cls(
+                                        "rounded-xl border px-3 py-2 text-left text-xs transition",
+                                        selected
+                                          ? "border-indigo-300 bg-white text-indigo-900 shadow-sm"
+                                          : "border-indigo-100 bg-white/70 text-slate-700 hover:border-indigo-200 hover:bg-white"
+                                      )}
+                                    >
+                                      <div className="font-bold">{medicine.name}</div>
+                                      <div className="mt-1 font-semibold text-emerald-600">{formatRupiah(medicine.price)}</div>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="mt-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
+                              Pilihan obat otomatis saat ini tersedia untuk dokter spesialis Diabetes.
+                            </div>
+                          )}
+
                           <textarea
                             value={rxText}
                             onChange={(e) => setRxText(e.target.value)}

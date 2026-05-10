@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Navbar } from "@/app/components/Navbar";
@@ -15,14 +16,22 @@ function cls(...parts: Array<string | false | null | undefined>) {
   return parts.filter(Boolean).join(" ");
 }
 
-function initials(name: string) {
-  return name
-    .replace(/^dr\.\s*/i, "")
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("");
+function getDoctorAvatar(name: string) {
+  const key = name.toLowerCase();
+
+  if (key.includes("andi")) {
+    return { src: "/face/andi.png", objectPosition: "center", scale: 1 };
+  }
+  if (key.includes("bagus")) {
+    return { src: "/face/bagus.png", objectPosition: "center", scale: 1 };
+  }
+  if (key.includes("nanda")) {
+    return { src: "/face/nanda.png", objectPosition: "center", scale: 1 };
+  }
+  if (key.includes("siti") || key.includes("rahma")) {
+    return { src: "/face/rahma.png", objectPosition: "center", scale: 1 };
+  }
+  return { src: "/dokter.png", objectPosition: "center", scale: 1 };
 }
 
 function DoctorsPageContent() {
@@ -150,6 +159,7 @@ function DoctorsPageContent() {
 
           {filtered.map((doctor) => {
             const active = doctor.id === pickedId;
+            const avatar = getDoctorAvatar(doctor.name);
 
             return (
               <article
@@ -160,8 +170,18 @@ function DoctorsPageContent() {
                 )}
               >
                 <div className="flex items-start gap-4">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 text-sm font-black text-white">
-                    {initials(doctor.name)}
+                  <div className="relative h-14 w-14 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-sm">
+                    <Image
+                      src={avatar.src}
+                      alt={`Foto ${doctor.name}`}
+                      fill
+                      sizes="56px"
+                      className="object-cover"
+                      style={{
+                        objectPosition: avatar.objectPosition,
+                        transform: `scale(${avatar.scale})`,
+                      }}
+                    />
                   </div>
 
                   <div className="min-w-0 flex-1">

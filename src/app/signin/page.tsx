@@ -72,28 +72,11 @@ export default function SignInPage() {
               <h1 className="mt-6 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
                 Masuk ke sistem booking Diabstrok.
               </h1>
-              <p className="mt-4 max-w-lg text-sm leading-7 text-[var(--color-foreground-muted)]">
-                Form ini langsung memanggil backend NestJS. Session di browser hanya dipakai untuk menyimpan token dan
-                profil user setelah login berhasil.
-              </p>
             </div>
 
             <div className="grid gap-3">
               <div className="rounded-[1.35rem] border border-[var(--color-border)] bg-white p-4">
-                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-primary)]">
-                  Backend Flow
-                </div>
-                <div className="mt-2 text-sm font-semibold text-slate-950">
-                  Frontend hanya mengirim request ke `POST /auth/login`.
-                </div>
-              </div>
-              <div className="rounded-[1.35rem] border border-[var(--color-border)] bg-white p-4">
-                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-primary)]">
-                  Session Client
-                </div>
-                <div className="mt-2 text-sm font-semibold text-slate-950">
-                  Token disimpan di client agar halaman terlindungi tetap bisa membaca role user.
-                </div>
+                
               </div>
             </div>
           </SurfaceCard>
@@ -102,7 +85,7 @@ export default function SignInPage() {
             <div className="text-sm font-bold uppercase tracking-[0.2em] text-[var(--color-primary)]">Sign In</div>
             <h2 className="mt-3 text-3xl font-black text-slate-950">Autentikasi user</h2>
             <p className="mt-2 text-sm text-[var(--color-foreground-soft)]">
-              Gunakan akun yang sudah terdaftar di backend NestJS.
+              Gunakan akun yang sudah terdaftar.
             </p>
 
             <form className="mt-8 space-y-4" onSubmit={handleSubmit(onSubmit)}>
