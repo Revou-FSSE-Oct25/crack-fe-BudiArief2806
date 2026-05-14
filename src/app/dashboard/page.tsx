@@ -7,9 +7,53 @@ import { useEffect, useMemo, useState } from "react";
 import { Navbar } from "@/app/components/Navbar";
 import { RoleGate } from "@/app/components/RoleGate";
 import { api } from "@/app/lib/api";
+import { useSessionPreferences } from "@/app/lib/use-preferences";
 import type { Booking } from "@/app/lib/types";
 
+const dashboardCopy = {
+  id: {
+    title: "Dashboard",
+    subtitle: "Ringkasan booking sekarang diambil langsung dari backend NestJS, bukan dari storage lokal browser.",
+    loadError: "Gagal memuat dashboard",
+    totalBooking: "Total Booking",
+    pending: "Pending",
+    inProgress: "Diproses",
+    completed: "Completed",
+    activity: "Aktivitas Booking",
+    activityDesc: "Lihat status terbaru dari booking yang sudah kamu buat.",
+    openBookings: "Buka My Bookings",
+    queue: "Antrian",
+    minutes: "menit",
+    empty: "Belum ada booking. Mulai dari halaman rumah sakit.",
+    quickActions: "Aksi Cepat",
+    createBooking: "Buat booking baru",
+    history: "Lihat riwayat booking",
+    note: "Swagger dan Postman nanti akan memakai endpoint backend yang sama dengan halaman ini.",
+  },
+  en: {
+    title: "Dashboard",
+    subtitle: "Booking summary is now loaded directly from the NestJS backend, not from local browser storage.",
+    loadError: "Failed to load dashboard",
+    totalBooking: "Total Bookings",
+    pending: "Pending",
+    inProgress: "In Progress",
+    completed: "Completed",
+    activity: "Booking Activity",
+    activityDesc: "See the latest status from bookings you have created.",
+    openBookings: "Open My Bookings",
+    queue: "Queue",
+    minutes: "minutes",
+    empty: "No bookings yet. Start from the hospital page.",
+    quickActions: "Quick Actions",
+    createBooking: "Create new booking",
+    history: "View booking history",
+    note: "Swagger and Postman will use the same backend endpoints as this page.",
+  },
+};
+
 export default function DashboardPage() {
+  const { language, darkMode } = useSessionPreferences();
+  const copy = dashboardCopy[language];
   const [items, setItems] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +72,7 @@ export default function DashboardPage() {
         setItems(res.items);
       } catch (err: any) {
         if (!mounted) return;
-        setError(err?.message || "Gagal memuat dashboard");
+        setError(err?.message || copy.loadError);
       } finally {
         if (mounted) setLoading(false);
       }
@@ -38,7 +82,7 @@ export default function DashboardPage() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [copy.loadError]);
 
   const stats = useMemo(() => {
     const pending = items.filter((item) => item.status === "PENDING").length;
@@ -56,14 +100,14 @@ export default function DashboardPage() {
   }, [items]);
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className={darkMode ? "min-h-screen bg-slate-950 text-slate-100" : "min-h-screen bg-slate-50"}>
       <Navbar />
       <RoleGate allow={["admin", "user"]}>
         <main className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
           <div className="rounded-2xl border border-slate-200 bg-white p-6">
-            <h1 className="text-2xl font-semibold text-slate-900">Dashboard</h1>
+            <h1 className="text-2xl font-semibold text-slate-900">{copy.title}</h1>
             <p className="mt-1 text-sm text-slate-600">
-              Ringkasan booking sekarang diambil langsung dari backend NestJS, bukan dari storage lokal browser.
+              {copy.subtitle}
             </p>
           </div>
 
@@ -73,10 +117,10 @@ export default function DashboardPage() {
 
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {[
-              { label: "Total Booking", value: stats.total },
-              { label: "Pending", value: stats.pending },
-              { label: "Diproses", value: stats.inReview },
-              { label: "Completed", value: stats.completed },
+              { label: copy.totalBooking, value: stats.total },
+              { label: copy.pending, value: stats.pending },
+              { label: copy.inProgress, value: stats.inReview },
+              { label: copy.completed, value: stats.completed },
             ].map((card) => (
               <div key={card.label} className="rounded-2xl border border-slate-200 bg-white p-5">
                 <div className="text-sm font-medium text-slate-500">{card.label}</div>
@@ -91,14 +135,14 @@ export default function DashboardPage() {
             <div className="rounded-2xl border border-slate-200 bg-white p-6">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-lg font-semibold text-slate-900">Aktivitas Booking</h2>
-                  <p className="mt-1 text-sm text-slate-600">Lihat status terbaru dari booking yang sudah kamu buat.</p>
+                  <h2 className="text-lg font-semibold text-slate-900">{copy.activity}</h2>
+                  <p className="mt-1 text-sm text-slate-600">{copy.activityDesc}</p>
                 </div>
                 <Link
                   href="/my-bookings"
                   className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
                 >
-                  Buka My Bookings
+                  {copy.openBookings}
                 </Link>
               </div>
 
@@ -113,36 +157,36 @@ export default function DashboardPage() {
                       {item.doctorName} · {item.roomName}
                     </div>
                     <div className="mt-1 text-xs text-slate-500">
-                      Antrian {item.queueNumber} · ETA {item.etaMinutes} menit
+                      {copy.queue} {item.queueNumber} - ETA {item.etaMinutes} {copy.minutes}
                     </div>
                   </div>
                 ))}
 
                 {!loading && items.length === 0 ? (
                   <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-5 text-sm text-slate-600">
-                    Belum ada booking. Mulai dari halaman rumah sakit.
+                    {copy.empty}
                   </div>
                 ) : null}
               </div>
             </div>
 
             <div className="rounded-2xl border border-slate-200 bg-white p-6">
-              <h2 className="text-lg font-semibold text-slate-900">Aksi Cepat</h2>
+              <h2 className="text-lg font-semibold text-slate-900">{copy.quickActions}</h2>
               <div className="mt-4 grid gap-3">
                 <Link
                   href="/hospitals"
                   className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-800 hover:bg-slate-100"
                 >
-                  Buat booking baru
+                  {copy.createBooking}
                 </Link>
                 <Link
                   href="/my-bookings"
                   className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-800 hover:bg-slate-100"
                 >
-                  Lihat riwayat booking
+                  {copy.history}
                 </Link>
                 <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4 text-sm text-indigo-800">
-                  Swagger dan Postman nanti akan memakai endpoint backend yang sama dengan halaman ini.
+                  {copy.note}
                 </div>
               </div>
             </div>

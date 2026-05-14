@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Navbar } from "@/app/components/Navbar";
 import { useToast } from "@/app/components/Toast";
 import { api } from "@/app/lib/api";
+import { useSessionPreferences } from "@/app/lib/use-preferences";
 import type { DoctorRecord, HospitalRecord, Specialty } from "@/app/lib/types";
 
 type DoctorView = DoctorRecord & {
@@ -34,10 +35,49 @@ function getDoctorAvatar(name: string) {
   return { src: "/dokter.png", objectPosition: "center", scale: 1 };
 }
 
+const doctorsCopy = {
+  id: {
+    label: "Direktori Medis",
+    title: "Pilih dokter dan lanjutkan ke booking rumah sakit.",
+    subtitle: "Halaman ini membaca data dokter dari backend NestJS lalu mengarahkan user ke halaman booking dengan rumah sakit dan spesialis yang relevan.",
+    search: "Cari nama dokter, spesialis, atau rumah sakit",
+    allSpecialties: "Semua spesialis",
+    loadError: "Gagal memuat daftar dokter",
+    loadErrorTitle: "Gagal memuat dokter",
+    loading: "Memuat dokter dari backend...",
+    empty: "Tidak ada dokter yang cocok dengan filter saat ini.",
+    status: "Status",
+    available: "Tersedia",
+    unavailable: "Belum tersedia",
+    continueBooking: "Lanjut ke Booking",
+    focusHospital: "Fokus Rumah Sakit",
+    fallbackLoading: "Memuat halaman dokter...",
+  },
+  en: {
+    label: "Medical Directory",
+    title: "Choose a doctor and continue to hospital booking.",
+    subtitle: "This page reads doctor data from the NestJS backend and sends users to booking with the relevant hospital and specialty.",
+    search: "Search doctor name, specialty, or hospital",
+    allSpecialties: "All specialties",
+    loadError: "Failed to load doctor list",
+    loadErrorTitle: "Failed to load doctors",
+    loading: "Loading doctors from backend...",
+    empty: "No doctors match the current filter.",
+    status: "Status",
+    available: "Available",
+    unavailable: "Unavailable",
+    continueBooking: "Continue to Booking",
+    focusHospital: "Focus Hospital",
+    fallbackLoading: "Loading doctor page...",
+  },
+};
+
 function DoctorsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { showToast } = useToast();
+  const { language, darkMode } = useSessionPreferences();
+  const copy = doctorsCopy[language];
 
   const [items, setItems] = useState<DoctorView[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,9 +112,9 @@ function DoctorsPageContent() {
         setItems(nextItems);
       } catch (err: any) {
         if (!mounted) return;
-        const message = err?.message || "Gagal memuat daftar dokter";
+        const message = err?.message || copy.loadError;
         setError(message);
-        showToast({ tone: "error", title: "Gagal memuat dokter", description: message });
+        showToast({ tone: "error", title: copy.loadErrorTitle, description: message });
       } finally {
         if (mounted) setLoading(false);
       }
@@ -84,7 +124,7 @@ function DoctorsPageContent() {
     return () => {
       mounted = false;
     };
-  }, [showToast]);
+  }, [showToast, copy.loadError, copy.loadErrorTitle]);
 
   const pickedId = searchParams.get("pick") || "";
 
@@ -100,37 +140,54 @@ function DoctorsPageContent() {
   }, [items, query, specialty]);
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#eefaf7_0%,#f8fbff_42%,#f8fafc_80%)] text-slate-900">
+    <div
+      className={cls(
+        "min-h-screen",
+        darkMode
+          ? "bg-[radial-gradient(circle_at_top,#172554_0%,#020617_48%,#020617_100%)] text-slate-100"
+          : "bg-[radial-gradient(circle_at_top,#eefaf7_0%,#f8fbff_42%,#f8fafc_80%)] text-slate-900",
+      )}
+    >
       <Navbar />
 
       <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <section className="rounded-[2rem] border border-white/70 bg-white/85 p-6 shadow-[0_26px_90px_-56px_rgba(15,23,42,0.35)] backdrop-blur">
+        <section
+          className={cls(
+            "rounded-[2rem] border p-6 shadow-[0_26px_90px_-56px_rgba(15,23,42,0.35)] backdrop-blur",
+            darkMode ? "border-slate-800 bg-slate-900/90" : "border-white/70 bg-white/85",
+          )}
+        >
           <div className="inline-flex items-center gap-2 rounded-full bg-sky-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-sky-700">
-            Medical Directory
+            {copy.label}
             <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
           </div>
 
-          <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
-            Pilih dokter dan lanjutkan ke booking rumah sakit.
+          <h1 className={cls("mt-4 text-3xl font-black tracking-tight sm:text-4xl", darkMode ? "text-white" : "text-slate-950")}>
+            {copy.title}
           </h1>
-          <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">
-            Halaman ini membaca data dokter dari backend NestJS lalu mengarahkan user ke halaman booking dengan rumah
-            sakit dan spesialis yang relevan.
+          <p className={cls("mt-3 max-w-3xl text-sm leading-7", darkMode ? "text-slate-300" : "text-slate-600")}>
+            {copy.subtitle}
           </p>
 
           <div className="mt-6 grid gap-3 sm:grid-cols-[1fr_220px]">
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Cari nama dokter, spesialis, atau rumah sakit"
-              className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
+              placeholder={copy.search}
+              className={cls(
+                "h-12 rounded-2xl border px-4 text-sm outline-none focus:border-sky-300 focus:ring-2 focus:ring-sky-100",
+                darkMode ? "border-slate-700 bg-slate-950 text-white placeholder:text-slate-500" : "border-slate-200 bg-white text-slate-900",
+              )}
             />
             <select
               value={specialty}
               onChange={(e) => setSpecialty(e.target.value as Specialty | "Semua")}
-              className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
+              className={cls(
+                "h-12 rounded-2xl border px-4 text-sm outline-none focus:border-sky-300 focus:ring-2 focus:ring-sky-100",
+                darkMode ? "border-slate-700 bg-slate-950 text-white" : "border-slate-200 bg-white text-slate-900",
+              )}
             >
-              <option value="Semua">Semua spesialis</option>
+              <option value="Semua">{copy.allSpecialties}</option>
               <option value="Umum">Umum</option>
               <option value="Diabetes">Diabetes</option>
               <option value="Stroke">Stroke</option>
@@ -146,14 +203,14 @@ function DoctorsPageContent() {
 
         <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {loading ? (
-            <div className="rounded-3xl border border-slate-200 bg-white p-6 text-sm text-slate-600">
-              Memuat dokter dari backend...
+            <div className={cls("rounded-3xl border p-6 text-sm", darkMode ? "border-slate-800 bg-slate-900 text-slate-300" : "border-slate-200 bg-white text-slate-600")}>
+              {copy.loading}
             </div>
           ) : null}
 
           {!loading && filtered.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-slate-200 bg-white p-6 text-sm text-slate-600">
-              Tidak ada dokter yang cocok dengan filter saat ini.
+            <div className={cls("rounded-3xl border border-dashed p-6 text-sm", darkMode ? "border-slate-700 bg-slate-900 text-slate-300" : "border-slate-200 bg-white text-slate-600")}>
+              {copy.empty}
             </div>
           ) : null}
 
@@ -165,12 +222,13 @@ function DoctorsPageContent() {
               <article
                 key={doctor.id}
                 className={cls(
-                  "rounded-3xl border bg-white p-6 shadow-sm transition",
-                  active ? "border-sky-200 ring-2 ring-sky-100" : "border-slate-200"
+                  "rounded-3xl border p-6 shadow-sm transition",
+                  darkMode ? "bg-slate-900 text-slate-100" : "bg-white",
+                  active ? "border-sky-200 ring-2 ring-sky-100" : darkMode ? "border-slate-800" : "border-slate-200"
                 )}
               >
                 <div className="flex items-start gap-4">
-                  <div className="relative h-14 w-14 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-sm">
+                  <div className={cls("relative h-14 w-14 overflow-hidden rounded-2xl border shadow-sm", darkMode ? "border-slate-700 bg-slate-800" : "border-slate-200 bg-slate-50")}>
                     <Image
                       src={avatar.src}
                       alt={`Foto ${doctor.name}`}
@@ -186,7 +244,7 @@ function DoctorsPageContent() {
 
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="text-lg font-black text-slate-950">{doctor.name}</h2>
+                      <h2 className={cls("text-lg font-black", darkMode ? "text-white" : "text-slate-950")}>{doctor.name}</h2>
                       <span
                         className={cls(
                           "rounded-full px-2.5 py-1 text-xs font-semibold",
@@ -200,9 +258,9 @@ function DoctorsPageContent() {
                         {doctor.specialty}
                       </span>
                     </div>
-                    <div className="mt-2 text-sm text-slate-600">{doctor.hospitalName}</div>
-                    <div className="mt-2 text-xs text-slate-500">
-                      Status: {doctor.available ? "Tersedia" : "Belum tersedia"}
+                    <div className={cls("mt-2 text-sm", darkMode ? "text-slate-300" : "text-slate-600")}>{doctor.hospitalName}</div>
+                    <div className={cls("mt-2 text-xs", darkMode ? "text-slate-400" : "text-slate-500")}>
+                      {copy.status}: {doctor.available ? copy.available : copy.unavailable}
                     </div>
                   </div>
                 </div>
@@ -216,13 +274,13 @@ function DoctorsPageContent() {
                     }
                     className="rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
                   >
-                    Lanjut ke Booking
+                    {copy.continueBooking}
                   </button>
                   <button
                     onClick={() => setQuery(doctor.hospitalName)}
                     className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                   >
-                    Fokus Rumah Sakit
+                    {copy.focusHospital}
                   </button>
                 </div>
               </article>

@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { clearSession, getRole, getUser } from "@/app/lib/auth";
+import { useSessionPreferences } from "@/app/lib/use-preferences";
 
 type NavItem = {
   href: string;
@@ -37,9 +38,36 @@ function navLinkClass(active: boolean) {
   ].join(" ");
 }
 
+const navbarCopy = {
+  id: {
+    home: "Home",
+    dashboard: "Dashboard",
+    hospitals: "Daftar Rumah Sakit",
+    doctors: "Daftar Dokter",
+    signin: "Masuk",
+    signup: "Daftar",
+    signedAs: "Masuk sebagai",
+    user: "Pengguna",
+    logout: "Logout",
+  },
+  en: {
+    home: "Home",
+    dashboard: "Dashboard",
+    hospitals: "Hospitals",
+    doctors: "Doctors",
+    signin: "Sign In",
+    signup: "Sign Up",
+    signedAs: "Signed in as",
+    user: "User",
+    logout: "Logout",
+  },
+};
+
 export function Navbar() {
   const path = usePathname();
   const router = useRouter();
+  const { language, darkMode } = useSessionPreferences();
+  const copy = navbarCopy[language];
 
   const [role, setRole] = useState<"admin" | "doctor" | "user" | null>(null);
   const [name, setName] = useState("");
@@ -95,42 +123,42 @@ export function Navbar() {
           { href: "/admin", label: "Dashboard", active: path.startsWith("/admin") },
           {
             href: "/hospitals",
-            label: "Daftar Rumah Sakit",
+            label: copy.hospitals,
             active: path.startsWith("/hospitals"),
           },
           {
             href: "/doctors",
-            label: "Daftar Dokter",
+            label: copy.doctors,
             active: path.startsWith("/doctors"),
           },
         ]
       : path === "/"
       ? [
-          { href: "#top", label: "Home", active: activeSection === "top", anchor: true },
+          { href: "#top", label: copy.home, active: activeSection === "top", anchor: true },
           {
             href: "#dashboard-preview",
-            label: "Dashboard",
+            label: copy.dashboard,
             active: activeSection === "dashboard-preview",
             anchor: true,
           },
           {
             href: "#doctor-availability",
-            label: "Daftar Dokter",
+            label: copy.doctors,
             active: activeSection === "doctor-availability",
             anchor: true,
           },
           {
             href: "#hospital-availability",
-            label: "Daftar Rumah Sakit",
+            label: copy.hospitals,
             active: activeSection === "hospital-availability",
             anchor: true,
           },
         ]
       : [
-          { href: "/", label: "Home", active: path === "/" },
+          { href: "/", label: copy.home, active: path === "/" },
           {
             href: dashboardHref,
-            label: "Dashboard",
+            label: copy.dashboard,
             active:
               path.startsWith("/dashboard") ||
               path.startsWith("/admin") ||
@@ -138,18 +166,23 @@ export function Navbar() {
           },
           {
             href: "/hospitals",
-            label: "Daftar Rumah Sakit",
+            label: copy.hospitals,
             active: path.startsWith("/hospitals"),
           },
           {
             href: "/doctors",
-            label: "Daftar Dokter",
+            label: copy.doctors,
             active: path.startsWith("/doctors"),
           },
         ];
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/88 backdrop-blur-xl">
+    <header
+      className={[
+        "sticky top-0 z-50 border-b backdrop-blur-xl",
+        darkMode ? "border-slate-800 bg-slate-950/88" : "border-slate-200/80 bg-white/88",
+      ].join(" ")}
+    >
       <div className="mx-auto flex h-[84px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex shrink-0 items-center gap-3">
           <AppIcon />
@@ -177,21 +210,21 @@ export function Navbar() {
                 href="/signin"
                 className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
               >
-                Masuk
+                {copy.signin}
               </Link>
               <Link
                 href="/signup"
                 className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_18px_40px_-24px_rgba(79,70,229,0.7)] transition hover:translate-y-[-1px]"
               >
-                Daftar
+                {copy.signup}
               </Link>
             </>
           ) : (
             <>
               <div className="hidden rounded-2xl border border-slate-200 bg-white px-4 py-2 text-right sm:block">
-                <p className="text-xs text-slate-500">Masuk sebagai</p>
+                <p className="text-xs text-slate-500">{copy.signedAs}</p>
                 <p className="text-sm font-semibold text-slate-900">
-                  {name || "Pengguna"}
+                  {name || copy.user}
                 </p>
               </div>
               <button
@@ -201,7 +234,7 @@ export function Navbar() {
                 }}
                 className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
               >
-                Logout
+                {copy.logout}
               </button>
             </>
           )}

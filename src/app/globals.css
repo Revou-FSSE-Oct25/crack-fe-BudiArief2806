@@ -47,6 +47,49 @@ body {
   font-family: var(--font-sans-stack);
 }
 
+/* Preferensi mode gelap global.
+   Nilai ini dipasang dari halaman admin melalui localStorage dan html[data-theme]. */
+html[data-theme="dark"] body {
+  background:
+    radial-gradient(circle at 15% 15%, rgba(37, 99, 235, 0.2), transparent 24%),
+    radial-gradient(circle at 85% 5%, rgba(124, 58, 237, 0.18), transparent 24%),
+    linear-gradient(180deg, #020617 0%, #0f172a 100%);
+  color: #e2e8f0;
+}
+
+html[data-theme="dark"] .page-shell,
+html[data-theme="dark"] [class*="bg-white"],
+html[data-theme="dark"] [class*="bg-slate-50"],
+html[data-theme="dark"] [class*="bg-slate-100"] {
+  background-color: rgba(15, 23, 42, 0.92) !important;
+}
+
+html[data-theme="dark"] [class*="border-slate-100"],
+html[data-theme="dark"] [class*="border-slate-200"] {
+  border-color: #1e293b !important;
+}
+
+html[data-theme="dark"] [class*="text-slate-950"],
+html[data-theme="dark"] [class*="text-slate-900"],
+html[data-theme="dark"] [class*="text-slate-800"],
+html[data-theme="dark"] [class*="text-slate-700"] {
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] [class*="text-slate-600"],
+html[data-theme="dark"] [class*="text-slate-500"],
+html[data-theme="dark"] [class*="text-slate-400"] {
+  color: #94a3b8 !important;
+}
+
+html[data-theme="dark"] input,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
 a {
   color: inherit;
   text-decoration: none;

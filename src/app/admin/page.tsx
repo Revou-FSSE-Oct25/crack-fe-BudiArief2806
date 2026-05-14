@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 import { RoleGate } from "@/app/components/RoleGate";
 import { clearSession, getUser } from "@/app/lib/auth";
 import { api } from "@/app/lib/api";
+import { applyPreferences, readUserPreferences, saveUserPreferences, type UserPreferences } from "@/app/lib/preferences";
 import type { Booking, DoctorRecord, HospitalRecord, User } from "@/app/lib/types";
 
 function cls(...parts: Array<string | false | null | undefined>) {
@@ -122,11 +123,13 @@ function DashboardIcon({ name, active = false }: { name: string; active?: boolea
   );
 }
 
+type AdminView = "dashboard" | "reports" | "settings";
+
 type MenuItem = {
   label: string;
   href: string;
   icon: string;
-  view?: "dashboard" | "reports";
+  view?: AdminView;
 };
 
 type MetricCard = {
@@ -135,6 +138,175 @@ type MetricCard = {
   hint: string;
   accent: string;
   bubble: string;
+};
+
+const adminCopy = {
+  id: {
+    adminDashboard: "Admin Dashboard",
+    menuHome: "Beranda",
+    menuProgram: "Program",
+    menuHospital: "Rumah Sakit",
+    menuDoctor: "Dokter",
+    menuPatient: "Pasien",
+    menuReport: "Laporan",
+    menuSchedule: "Jadwal",
+    menuSettings: "Pengaturan",
+    logout: "Logout",
+    logoutAccount: "Logout Akun",
+    reportTitle: "Laporan",
+    dashboardTitle: "Dashboard",
+    settingsTitle: "Pengaturan",
+    reportSubtitle: "Laporan keuangan dan daftar obat yang terjual dari review dokter.",
+    settingsSubtitle: "Kelola profil admin, kontak, tema, bahasa, dan akses logout akun.",
+    welcome: "Selamat datang kembali",
+    metricActiveBookings: "Booking Aktif",
+    metricActiveBookingsHint: "Kasus yang masih diproses admin",
+    metricHospitals: "Rumah Sakit",
+    metricHospitalsHint: "Lokasi yang terhubung ke backend",
+    metricDoctors: "Dokter Siaga",
+    metricDoctorsHint: "Dokter dengan slot aktif",
+    metricCompletion: "Tingkat Selesai",
+    metricCompletionHint: "booking sudah selesai",
+    totalRevenue: "Total Pendapatan",
+    reviewTransactions: "Transaksi Review",
+    averageCost: "Rata-rata Biaya",
+    soldMedicine: "Obat Terjual",
+    financeReport: "Laporan Keuangan",
+    financeReportDesc: "Ringkasan biaya dari booking yang sudah memiliki review dokter.",
+    soldMedicineList: "Daftar Obat Terjual",
+    soldMedicineDesc: "Diambil dari daftar resep yang dikirim dokter ke admin.",
+    medicineTypes: "jenis obat",
+    medicineName: "Nama Obat",
+    price: "Harga",
+    soldQty: "Jumlah Terjual",
+    total: "Total",
+    noSoldMedicine: "Belum ada obat yang tercatat terjual.",
+    activeAdminAccount: "Akun Admin Aktif",
+    emailEmpty: "Email belum diisi",
+    editProfile: "Edit Profil",
+    editProfileDesc: "Ubah data admin yang tampil di dashboard. Untuk demo, perubahan disimpan di browser.",
+    profileName: "Nama Profil",
+    profileNamePlaceholder: "Nama admin",
+    phone: "Nomor HP",
+    darkMode: "Mode Gelap",
+    darkModeDesc: "Aktifkan tampilan gelap untuk seluruh halaman admin.",
+    darkModeOn: "Mode gelap aktif",
+    lightModeOn: "Mode terang aktif",
+    language: "Bahasa",
+    languageDesc: "Pilih bahasa tampilan admin.",
+    saveSettings: "Simpan Pengaturan",
+    settingsSaved: "Pengaturan berhasil disimpan.",
+    doctorDistribution: "Distribusi Dokter",
+    doctorDistributionDesc: "Sebaran dokter berdasarkan spesialis yang aktif di sistem.",
+    viewDoctors: "Lihat dokter",
+    latestActivity: "Aktivitas Terbaru",
+    viewAll: "Lihat semua",
+    noBookingActivity: "Belum ada aktivitas booking.",
+    newBookingTriage: "Booking baru menunggu triage admin",
+    sentToDoctor: "Kasus sudah dikirim ke dokter",
+    doctorReviewReady: "Hasil review dokter sudah masuk",
+    caseFinished: "Kasus sudah selesai",
+    hospitalList: "Daftar Rumah Sakit",
+    hospitalListDesc: "Tetap tampil untuk admin saat memilih lokasi pendaftaran pasien.",
+    openList: "Buka daftar",
+    activeDoctors: "dokter aktif",
+    totalDoctors: "Total Dokter",
+    coordinate: "Koordinat",
+    connectedDoctors: "Dokter Terhubung",
+    connectedDoctorsDesc: "Admin tetap bisa memantau semua dokter dari dashboard utama.",
+    monitoring: "Monitoring",
+    hospital: "Rumah Sakit",
+    specialty: "Spesialis",
+    status: "Status",
+    active: "Aktif",
+    full: "Penuh",
+    noConnectedDoctor: "Belum ada dokter yang terhubung.",
+    registerPatient: "Daftarkan Pasien",
+    manageBooking: "Kelola Booking",
+  },
+  en: {
+    adminDashboard: "Admin Dashboard",
+    menuHome: "Home",
+    menuProgram: "Programs",
+    menuHospital: "Hospitals",
+    menuDoctor: "Doctors",
+    menuPatient: "Patients",
+    menuReport: "Reports",
+    menuSchedule: "Schedule",
+    menuSettings: "Settings",
+    logout: "Logout",
+    logoutAccount: "Logout Account",
+    reportTitle: "Reports",
+    dashboardTitle: "Dashboard",
+    settingsTitle: "Settings",
+    reportSubtitle: "Financial report and medicine sales from doctor reviews.",
+    settingsSubtitle: "Manage admin profile, contact, theme, language, and account logout access.",
+    welcome: "Welcome back",
+    metricActiveBookings: "Active Bookings",
+    metricActiveBookingsHint: "Cases still being processed by admin",
+    metricHospitals: "Hospitals",
+    metricHospitalsHint: "Locations connected to the backend",
+    metricDoctors: "Doctors On Duty",
+    metricDoctorsHint: "Doctors with active slots",
+    metricCompletion: "Completion Rate",
+    metricCompletionHint: "bookings completed",
+    totalRevenue: "Total Revenue",
+    reviewTransactions: "Review Transactions",
+    averageCost: "Average Cost",
+    soldMedicine: "Medicine Sold",
+    financeReport: "Financial Report",
+    financeReportDesc: "Cost summary from bookings that already have doctor reviews.",
+    soldMedicineList: "Sold Medicine List",
+    soldMedicineDesc: "Collected from prescriptions sent by doctors to admin.",
+    medicineTypes: "medicine types",
+    medicineName: "Medicine Name",
+    price: "Price",
+    soldQty: "Sold Quantity",
+    total: "Total",
+    noSoldMedicine: "No sold medicine has been recorded yet.",
+    activeAdminAccount: "Active Admin Account",
+    emailEmpty: "Email has not been filled",
+    editProfile: "Edit Profile",
+    editProfileDesc: "Update admin data shown on the dashboard. For demo, changes are saved in the browser.",
+    profileName: "Profile Name",
+    profileNamePlaceholder: "Admin name",
+    phone: "Phone Number",
+    darkMode: "Dark Mode",
+    darkModeDesc: "Enable dark mode for the entire admin page.",
+    darkModeOn: "Dark mode active",
+    lightModeOn: "Light mode active",
+    language: "Language",
+    languageDesc: "Choose the admin display language.",
+    saveSettings: "Save Settings",
+    settingsSaved: "Settings saved successfully.",
+    doctorDistribution: "Doctor Distribution",
+    doctorDistributionDesc: "Doctor spread by specialty currently active in the system.",
+    viewDoctors: "View doctors",
+    latestActivity: "Latest Activity",
+    viewAll: "View all",
+    noBookingActivity: "No booking activity yet.",
+    newBookingTriage: "New booking waiting for admin triage",
+    sentToDoctor: "Case has been sent to doctor",
+    doctorReviewReady: "Doctor review result is ready",
+    caseFinished: "Case has been completed",
+    hospitalList: "Hospital List",
+    hospitalListDesc: "Available for admins when choosing patient registration locations.",
+    openList: "Open list",
+    activeDoctors: "active doctors",
+    totalDoctors: "Total Doctors",
+    coordinate: "Coordinate",
+    connectedDoctors: "Connected Doctors",
+    connectedDoctorsDesc: "Admin can monitor every doctor from the main dashboard.",
+    monitoring: "Monitoring",
+    hospital: "Hospital",
+    specialty: "Specialty",
+    status: "Status",
+    active: "Active",
+    full: "Full",
+    noConnectedDoctor: "No connected doctors yet.",
+    registerPatient: "Register Patient",
+    manageBooking: "Manage Booking",
+  },
 };
 
 function ReportIcon({ tone, kind }: { tone: "violet" | "blue" | "green" | "amber"; kind: "wallet" | "cart" | "trend" | "bag" | "bottle" }) {
@@ -220,14 +392,29 @@ export default function AdminPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [hospitals, setHospitals] = useState<HospitalRecord[]>([]);
   const [doctors, setDoctors] = useState<DoctorRecord[]>([]);
-  const [activeView, setActiveView] = useState<"dashboard" | "reports">("dashboard");
+  const [activeView, setActiveView] = useState<AdminView>("dashboard");
+  // Data pengaturan dibaca per akun login, jadi admin/dokter/user tidak saling menimpa preferensi.
+  const [profileName, setProfileName] = useState("");
+  const [profileEmail, setProfileEmail] = useState("");
+  const [profilePhone, setProfilePhone] = useState("");
+  const [darkMode, setDarkMode] = useState(false);
+  const [language, setLanguage] = useState<"id" | "en">("id");
+  const [settingsSaved, setSettingsSaved] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
 
-    setViewer(getUser());
+    const currentUser = getUser();
+    setViewer(currentUser);
+    const preferences = readUserPreferences(currentUser);
+    setProfileName(preferences?.name || currentUser?.name || "Admin Diabstrok");
+    setProfileEmail(preferences?.email || currentUser?.email || "");
+    setProfilePhone(preferences?.phone || "");
+    setDarkMode(preferences?.darkMode || false);
+    setLanguage(preferences?.language || "id");
+    applyPreferences(preferences);
 
     async function load() {
       setLoading(true);
@@ -259,6 +446,8 @@ export default function AdminPage() {
       mounted = false;
     };
   }, []);
+
+  const copy = adminCopy[language];
 
   const stats = useMemo(() => {
     const activeBookings = bookings.filter((item) => item.status !== "COMPLETED").length;
@@ -324,15 +513,15 @@ export default function AdminPage() {
         subtitle: `${item.hospitalName} - ${item.doctorName}`,
         detail:
           item.status === "PENDING"
-            ? "Booking baru menunggu triage admin"
+            ? copy.newBookingTriage
             : item.status === "CONFIRMED"
-            ? "Kasus sudah dikirim ke dokter"
+            ? copy.sentToDoctor
             : item.status === "REVIEWED_BY_DOCTOR"
-            ? "Hasil review dokter sudah masuk"
-            : "Kasus sudah selesai",
+            ? copy.doctorReviewReady
+            : copy.caseFinished,
         time: formatTimeAgo(item.createdAt),
       }));
-  }, [bookings]);
+  }, [bookings, copy.caseFinished, copy.doctorReviewReady, copy.newBookingTriage, copy.sentToDoctor]);
 
   const hospitalCards = useMemo(() => {
     return hospitals.map((hospital) => {
@@ -350,35 +539,50 @@ export default function AdminPage() {
   const metricCards = useMemo<MetricCard[]>(
     () => [
       {
-        label: "Booking Aktif",
+        label: copy.metricActiveBookings,
         value: loading ? "..." : String(stats.activeBookings),
-        hint: "Kasus yang masih diproses admin",
+        hint: copy.metricActiveBookingsHint,
         accent: "text-slate-950",
         bubble: "bg-violet-100 text-violet-600",
       },
       {
-        label: "Rumah Sakit",
+        label: copy.metricHospitals,
         value: loading ? "..." : String(hospitals.length),
-        hint: "Lokasi yang terhubung ke backend",
+        hint: copy.metricHospitalsHint,
         accent: "text-slate-950",
         bubble: "bg-sky-100 text-sky-600",
       },
       {
-        label: "Dokter Siaga",
+        label: copy.metricDoctors,
         value: loading ? "..." : String(stats.activeDoctors),
-        hint: "Dokter dengan slot aktif",
+        hint: copy.metricDoctorsHint,
         accent: "text-slate-950",
         bubble: "bg-cyan-100 text-cyan-600",
       },
       {
-        label: "Tingkat Selesai",
+        label: copy.metricCompletion,
         value: loading ? "..." : `${stats.completionRate}%`,
-        hint: `${stats.completedBookings} booking sudah selesai`,
+        hint: `${stats.completedBookings} ${copy.metricCompletionHint}`,
         accent: "text-slate-950",
         bubble: "bg-emerald-100 text-emerald-600",
       },
     ],
-    [hospitals.length, loading, stats.activeBookings, stats.activeDoctors, stats.completedBookings, stats.completionRate],
+    [
+      copy.metricActiveBookings,
+      copy.metricActiveBookingsHint,
+      copy.metricCompletion,
+      copy.metricCompletionHint,
+      copy.metricDoctors,
+      copy.metricDoctorsHint,
+      copy.metricHospitals,
+      copy.metricHospitalsHint,
+      hospitals.length,
+      loading,
+      stats.activeBookings,
+      stats.activeDoctors,
+      stats.completedBookings,
+      stats.completionRate,
+    ],
   );
 
   const reportData = useMemo(() => {
@@ -420,47 +624,142 @@ export default function AdminPage() {
   const reportMetricCards = useMemo(
     () => [
       {
-        label: "Total Pendapatan",
+        label: copy.totalRevenue,
         value: loading ? "..." : formatRupiah(reportData.totalRevenue),
         tone: "violet" as const,
         icon: "wallet" as const,
       },
       {
-        label: "Transaksi Review",
+        label: copy.reviewTransactions,
         value: loading ? "..." : String(reportData.reviewedBookings.length),
         tone: "blue" as const,
         icon: "cart" as const,
       },
       {
-        label: "Rata-rata Biaya",
+        label: copy.averageCost,
         value: loading ? "..." : formatRupiah(reportData.averageRevenue),
         tone: "green" as const,
         icon: "trend" as const,
       },
       {
-        label: "Obat Terjual",
+        label: copy.soldMedicine,
         value: loading ? "..." : String(reportData.soldMedicineCount),
         tone: "amber" as const,
         icon: "bag" as const,
       },
     ],
-    [loading, reportData.averageRevenue, reportData.reviewedBookings.length, reportData.soldMedicineCount, reportData.totalRevenue],
+    [
+      copy.averageCost,
+      copy.reviewTransactions,
+      copy.soldMedicine,
+      copy.totalRevenue,
+      loading,
+      reportData.averageRevenue,
+      reportData.reviewedBookings.length,
+      reportData.soldMedicineCount,
+      reportData.totalRevenue,
+    ],
   );
 
+  function saveSettings() {
+    if (!viewer) return;
+
+    // Simpan preferensi hanya untuk akun yang sedang login.
+    saveUserPreferences(viewer, {
+      name: profileName,
+      email: profileEmail,
+      phone: profilePhone,
+      darkMode,
+      language,
+    });
+    applyPreferences({ darkMode, language });
+    setViewer((current) => (current ? { ...current, name: profileName, email: profileEmail } : current));
+    setSettingsSaved(copy.settingsSaved);
+  }
+
+  function persistPreferencePatch(patch: Partial<UserPreferences>) {
+    if (!viewer) return;
+
+    // Ambil preferensi terakhir dari storage agar klik cepat bahasa/tema tidak saling menimpa.
+    const latest = readUserPreferences(viewer) || {
+      name: profileName,
+      email: profileEmail,
+      phone: profilePhone,
+      darkMode,
+      language,
+    };
+    const nextPreferences = {
+      ...latest,
+      name: profileName,
+      email: profileEmail,
+      phone: profilePhone,
+      ...patch,
+    };
+
+    saveUserPreferences(viewer, nextPreferences);
+    applyPreferences(nextPreferences);
+  }
+
   const menuItems: MenuItem[] = [
-    { label: "Beranda", href: "/admin", icon: "home", view: "dashboard" },
-    { label: "Program", href: "/admin/bookings", icon: "report" },
-    { label: "Rumah Sakit", href: "/hospitals", icon: "hospital" },
-    { label: "Dokter", href: "/doctors", icon: "doctor" },
-    { label: "Pasien", href: "/hospitals", icon: "patient" },
-    { label: "Laporan", href: "/admin", icon: "report", view: "reports" },
-    { label: "Jadwal", href: "/admin/bookings", icon: "schedule" },
-    { label: "Pengaturan", href: "/admin", icon: "plus" },
+    { label: copy.menuHome, href: "/admin", icon: "home", view: "dashboard" },
+    { label: copy.menuProgram, href: "/admin/bookings", icon: "report" },
+    { label: copy.menuHospital, href: "/hospitals", icon: "hospital" },
+    { label: copy.menuDoctor, href: "/doctors", icon: "doctor" },
+    { label: copy.menuPatient, href: "/hospitals", icon: "patient" },
+    { label: copy.menuReport, href: "/admin", icon: "report", view: "reports" },
+    { label: copy.menuSchedule, href: "/admin/bookings", icon: "schedule" },
+    { label: copy.menuSettings, href: "/admin", icon: "plus", view: "settings" },
   ];
 
   return (
     <RoleGate allow={["admin"]}>
-      <div className="min-h-screen bg-[radial-gradient(circle_at_top,#eff6ff_0%,#f8fafc_40%,#f8fafc_100%)] px-3 py-4 text-slate-900 sm:px-4 lg:px-6">
+      <div className={cls("min-h-screen bg-[radial-gradient(circle_at_top,#eff6ff_0%,#f8fafc_40%,#f8fafc_100%)] px-3 py-4 text-slate-900 sm:px-4 lg:px-6", darkMode && "admin-dark")}>
+        <style jsx global>{`
+          .admin-dark {
+            background: radial-gradient(circle at top, #0f172a 0%, #020617 46%, #020617 100%) !important;
+            color: #e2e8f0;
+          }
+
+          .admin-dark [class*="bg-white"],
+          .admin-dark [class*="bg-slate-50"],
+          .admin-dark [class*="bg-slate-100"] {
+            background-color: rgba(15, 23, 42, 0.92) !important;
+          }
+
+          .admin-dark [class*="border-slate-100"],
+          .admin-dark [class*="border-slate-200"] {
+            border-color: #1e293b !important;
+          }
+
+          .admin-dark [class*="text-slate-950"],
+          .admin-dark [class*="text-slate-900"],
+          .admin-dark [class*="text-slate-800"],
+          .admin-dark [class*="text-slate-700"] {
+            color: #f8fafc !important;
+          }
+
+          .admin-dark [class*="text-slate-600"],
+          .admin-dark [class*="text-slate-500"],
+          .admin-dark [class*="text-slate-400"] {
+            color: #94a3b8 !important;
+          }
+
+          .admin-dark input,
+          .admin-dark textarea,
+          .admin-dark select {
+            background-color: #0f172a !important;
+            border-color: #334155 !important;
+            color: #f8fafc !important;
+          }
+
+          .admin-dark input::placeholder {
+            color: #64748b !important;
+          }
+
+          .admin-dark [class*="shadow"] {
+            box-shadow: 0 28px 80px -55px rgba(0, 0, 0, 0.9) !important;
+          }
+        `}</style>
         <div className="mx-auto flex min-h-[calc(100vh-2rem)] max-w-[1450px] gap-4">
           <aside className="hidden w-[240px] shrink-0 rounded-[2rem] border border-slate-200 bg-white/95 p-5 shadow-[0_28px_70px_-42px_rgba(15,23,42,0.28)] backdrop-blur lg:flex lg:flex-col">
             <div className="flex items-center gap-3">
@@ -475,7 +774,7 @@ export default function AdminPage() {
               </div>
               <div>
                 <div className="text-lg font-black tracking-tight text-slate-950">DIABSTROK</div>
-                <div className="text-xs text-slate-500">Admin Dashboard</div>
+                <div className="text-xs text-slate-500">{copy.adminDashboard}</div>
               </div>
             </div>
 
@@ -537,7 +836,7 @@ export default function AdminPage() {
                 }}
                 className="mt-4 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
               >
-                Logout
+                {copy.logout}
               </button>
             </div>
           </aside>
@@ -546,12 +845,14 @@ export default function AdminPage() {
             <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-5">
               <div>
                 <div className="text-3xl font-black tracking-tight text-slate-950">
-                  {activeView === "reports" ? "Laporan" : "Dashboard"}
+                  {activeView === "reports" ? copy.reportTitle : activeView === "settings" ? copy.settingsTitle : copy.dashboardTitle}
                 </div>
                 <div className="mt-1 text-sm text-slate-500">
                   {activeView === "reports"
-                    ? "Laporan keuangan dan daftar obat yang terjual dari review dokter."
-                    : `Selamat datang kembali, ${viewer?.name || "Admin Diabstrok"}`}
+                    ? copy.reportSubtitle
+                    : activeView === "settings"
+                    ? copy.settingsSubtitle
+                    : `${copy.welcome}, ${viewer?.name || "Admin Diabstrok"}`}
                 </div>
               </div>
 
@@ -586,9 +887,9 @@ export default function AdminPage() {
                     <div className="flex items-start gap-4">
                       <ReportIcon tone="violet" kind="trend" />
                       <div>
-                        <div className="text-2xl font-black tracking-tight text-slate-950">Laporan Keuangan</div>
+                        <div className="text-2xl font-black tracking-tight text-slate-950">{copy.financeReport}</div>
                         <div className="mt-2 text-base font-medium text-slate-500">
-                          Ringkasan biaya dari booking yang sudah memiliki review dokter.
+                          {copy.financeReportDesc}
                         </div>
                       </div>
                     </div>
@@ -597,7 +898,7 @@ export default function AdminPage() {
                       <div className="rounded-full bg-emerald-50 px-8 py-3 text-xl font-black text-emerald-700">
                         {formatRupiah(reportData.totalRevenue)}
                       </div>
-                      <div className="mt-2 text-sm font-medium text-slate-500">Total Pendapatan</div>
+                      <div className="mt-2 text-sm font-medium text-slate-500">{copy.totalRevenue}</div>
                     </div>
                   </div>
 
@@ -619,14 +920,14 @@ export default function AdminPage() {
                     <div className="flex items-start gap-4">
                       <ReportIcon tone="violet" kind="bottle" />
                       <div>
-                        <div className="text-2xl font-black tracking-tight text-slate-950">Daftar Obat Terjual</div>
+                        <div className="text-2xl font-black tracking-tight text-slate-950">{copy.soldMedicineList}</div>
                         <div className="mt-2 text-base font-medium text-slate-500">
-                          Diambil dari daftar resep yang dikirim dokter ke admin.
+                          {copy.soldMedicineDesc}
                         </div>
                       </div>
                     </div>
                     <div className="rounded-full bg-violet-50 px-5 py-3 text-base font-bold text-violet-600">
-                      {reportData.soldMedicines.length} jenis obat
+                      {reportData.soldMedicines.length} {copy.medicineTypes}
                     </div>
                   </div>
 
@@ -634,10 +935,10 @@ export default function AdminPage() {
                     <table className="min-w-full border-separate border-spacing-y-2">
                       <thead>
                         <tr className="text-left text-xs font-black uppercase tracking-[0.22em] text-slate-400">
-                          <th className="px-5 py-3">Nama Obat</th>
-                          <th className="px-5 py-3">Harga</th>
-                          <th className="px-5 py-3">Jumlah Terjual</th>
-                          <th className="px-5 py-3">Total</th>
+                          <th className="px-5 py-3">{copy.medicineName}</th>
+                          <th className="px-5 py-3">{copy.price}</th>
+                          <th className="px-5 py-3">{copy.soldQty}</th>
+                          <th className="px-5 py-3">{copy.total}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -676,7 +977,7 @@ export default function AdminPage() {
                         {!loading && reportData.soldMedicines.length === 0 ? (
                           <tr>
                             <td colSpan={4} className="rounded-[1.2rem] border border-dashed border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-500">
-                              Belum ada obat yang tercatat terjual.
+                              {copy.noSoldMedicine}
                             </td>
                           </tr>
                         ) : null}
@@ -687,7 +988,177 @@ export default function AdminPage() {
               </div>
             ) : null}
 
-            <div className={activeView === "reports" ? "hidden" : ""}>
+            {activeView === "settings" ? (
+              <div className="mt-8 grid gap-6">
+                {/* Area akun diletakkan paling atas supaya admin langsung melihat status login dan tombol logout. */}
+                <section className="rounded-[1.8rem] border border-slate-200 bg-white p-6 shadow-[0_28px_80px_-52px_rgba(15,23,42,0.28)]">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="relative h-16 w-16 overflow-hidden rounded-3xl shadow-lg shadow-violet-500/20 ring-1 ring-slate-200/70">
+                        <Image src="/logo2.png" alt="Logo akun admin" fill sizes="64px" className="object-cover" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-black uppercase tracking-[0.22em] text-violet-500">{copy.activeAdminAccount}</div>
+                        <div className="mt-1 text-2xl font-black tracking-tight text-slate-950">{profileName || viewer?.name || "Admin Diabstrok"}</div>
+                        <div className="mt-1 text-sm text-slate-500">{profileEmail || viewer?.email || copy.emailEmpty}</div>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        clearSession();
+                        window.location.href = "/signin";
+                      }}
+                      className="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-3 text-sm font-black text-rose-600 transition hover:bg-rose-100"
+                    >
+                      {copy.logoutAccount}
+                    </button>
+                  </div>
+                </section>
+
+                <section
+                  className={cls(
+                    "rounded-[1.8rem] border p-6 shadow-[0_28px_80px_-52px_rgba(15,23,42,0.28)] transition",
+                    darkMode ? "border-slate-800 bg-slate-950 text-white" : "border-slate-200 bg-white text-slate-950",
+                  )}
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div>
+                      <div className={cls("text-2xl font-black tracking-tight", darkMode ? "text-white" : "text-slate-950")}>{copy.editProfile}</div>
+                      <div className={cls("mt-2 text-sm", darkMode ? "text-slate-300" : "text-slate-500")}>
+                        {copy.editProfileDesc}
+                      </div>
+                    </div>
+                    {settingsSaved ? (
+                      <div className="rounded-full bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-700">
+                        {settingsSaved}
+                      </div>
+                    ) : null}
+                  </div>
+
+                  <div className="mt-7 grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+                    <div className="grid gap-4">
+                      <label className="grid gap-2">
+                        <span className={cls("text-xs font-black uppercase tracking-[0.2em]", darkMode ? "text-slate-300" : "text-slate-400")}>{copy.profileName}</span>
+                        <input
+                          value={profileName}
+                          onChange={(event) => setProfileName(event.target.value)}
+                          placeholder={copy.profileNamePlaceholder}
+                          className={cls(
+                            "rounded-2xl border px-4 py-3 text-sm font-semibold outline-none transition focus:ring-4 focus:ring-violet-100",
+                            darkMode ? "border-slate-700 bg-slate-900 text-white placeholder:text-slate-500" : "border-slate-200 bg-white text-slate-900 placeholder:text-slate-400",
+                          )}
+                        />
+                      </label>
+
+                      <label className="grid gap-2">
+                        <span className={cls("text-xs font-black uppercase tracking-[0.2em]", darkMode ? "text-slate-300" : "text-slate-400")}>Email</span>
+                        <input
+                          type="email"
+                          value={profileEmail}
+                          onChange={(event) => setProfileEmail(event.target.value)}
+                          placeholder="admin@diabstrok.id"
+                          className={cls(
+                            "rounded-2xl border px-4 py-3 text-sm font-semibold outline-none transition focus:ring-4 focus:ring-violet-100",
+                            darkMode ? "border-slate-700 bg-slate-900 text-white placeholder:text-slate-500" : "border-slate-200 bg-white text-slate-900 placeholder:text-slate-400",
+                          )}
+                        />
+                      </label>
+
+                      <label className="grid gap-2">
+                        <span className={cls("text-xs font-black uppercase tracking-[0.2em]", darkMode ? "text-slate-300" : "text-slate-400")}>{copy.phone}</span>
+                        <input
+                          value={profilePhone}
+                          onChange={(event) => setProfilePhone(event.target.value)}
+                          placeholder="08xxxxxxxxxx"
+                          className={cls(
+                            "rounded-2xl border px-4 py-3 text-sm font-semibold outline-none transition focus:ring-4 focus:ring-violet-100",
+                            darkMode ? "border-slate-700 bg-slate-900 text-white placeholder:text-slate-500" : "border-slate-200 bg-white text-slate-900 placeholder:text-slate-400",
+                          )}
+                        />
+                      </label>
+                    </div>
+
+                    <div className="grid gap-4">
+                      {/* Preferensi cepat untuk mode gelap dan bahasa. */}
+                      <div className={cls("rounded-[1.4rem] border p-5", darkMode ? "border-slate-800 bg-slate-900" : "border-slate-200 bg-slate-50")}>
+                        <div className={cls("text-sm font-black", darkMode ? "text-white" : "text-slate-950")}>{copy.darkMode}</div>
+                        <div className={cls("mt-1 text-sm", darkMode ? "text-slate-300" : "text-slate-500")}>
+                          {copy.darkModeDesc}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDarkMode((value) => {
+                              const nextValue = !value;
+                              persistPreferencePatch({ darkMode: nextValue });
+                              return nextValue;
+                            });
+                          }}
+                          className={cls(
+                            "mt-4 flex w-full items-center justify-between rounded-2xl px-4 py-3 text-sm font-black transition",
+                            darkMode ? "bg-violet-500 text-white" : "bg-white text-slate-700 ring-1 ring-slate-200",
+                          )}
+                        >
+                          <span>{darkMode ? copy.darkModeOn : copy.lightModeOn}</span>
+                          <span className={cls("flex h-7 w-12 items-center rounded-full p-1", darkMode ? "bg-white/25" : "bg-slate-200")}>
+                            <span className={cls("h-5 w-5 rounded-full bg-white shadow transition", darkMode ? "translate-x-5" : "translate-x-0")} />
+                          </span>
+                        </button>
+                      </div>
+
+                      <div className={cls("rounded-[1.4rem] border p-5", darkMode ? "border-slate-800 bg-slate-900" : "border-slate-200 bg-slate-50")}>
+                        <div className={cls("text-sm font-black", darkMode ? "text-white" : "text-slate-950")}>{copy.language}</div>
+                        <div className={cls("mt-1 text-sm", darkMode ? "text-slate-300" : "text-slate-500")}>
+                          {copy.languageDesc}
+                        </div>
+                        <div className="mt-4 grid grid-cols-2 gap-2 rounded-2xl bg-white/70 p-1 ring-1 ring-slate-200">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              persistPreferencePatch({ language: "id" });
+                              setLanguage("id");
+                              setSettingsSaved("");
+                            }}
+                            className={cls(
+                              "rounded-xl px-4 py-2 text-sm font-black transition",
+                              language === "id" ? "bg-violet-500 text-white shadow-lg shadow-violet-500/20" : "text-slate-500 hover:bg-slate-50",
+                            )}
+                          >
+                            Indonesia
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              persistPreferencePatch({ language: "en" });
+                              setLanguage("en");
+                              setSettingsSaved("");
+                            }}
+                            className={cls(
+                              "rounded-xl px-4 py-2 text-sm font-black transition",
+                              language === "en" ? "bg-violet-500 text-white shadow-lg shadow-violet-500/20" : "text-slate-500 hover:bg-slate-50",
+                            )}
+                          >
+                            English
+                          </button>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={saveSettings}
+                        className="rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-3 text-sm font-black text-white shadow-[0_18px_40px_-22px_rgba(124,58,237,0.65)] transition hover:brightness-105"
+                      >
+                        {copy.saveSettings}
+                      </button>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            ) : null}
+
+            <div className={activeView !== "dashboard" ? "hidden" : ""}>
             <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               {metricCards.map((card) => (
                 <section
@@ -710,11 +1181,11 @@ export default function AdminPage() {
               <section className="rounded-[1.8rem] border border-slate-200 bg-white p-5">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <div className="text-xl font-bold text-slate-900">Distribusi Dokter</div>
-                    <div className="mt-1 text-sm text-slate-500">Sebaran dokter berdasarkan spesialis yang aktif di sistem.</div>
+                    <div className="text-xl font-bold text-slate-900">{copy.doctorDistribution}</div>
+                    <div className="mt-1 text-sm text-slate-500">{copy.doctorDistributionDesc}</div>
                   </div>
                   <Link href="/doctors" className="text-sm font-semibold text-violet-600 hover:text-violet-700">
-                    Lihat dokter
+                    {copy.viewDoctors}
                   </Link>
                 </div>
 
@@ -752,16 +1223,16 @@ export default function AdminPage() {
 
               <section className="rounded-[1.8rem] border border-slate-200 bg-white p-5">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="text-xl font-bold text-slate-900">Aktivitas Terbaru</div>
+                  <div className="text-xl font-bold text-slate-900">{copy.latestActivity}</div>
                   <Link href="/admin/bookings" className="text-sm font-semibold text-violet-600 hover:text-violet-700">
-                    Lihat semua
+                    {copy.viewAll}
                   </Link>
                 </div>
 
                 <div className="mt-5 space-y-3">
                   {latestActivity.length === 0 ? (
                     <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-sm text-slate-500">
-                      Belum ada aktivitas booking.
+                      {copy.noBookingActivity}
                     </div>
                   ) : null}
 
@@ -790,11 +1261,11 @@ export default function AdminPage() {
               <section className="rounded-[1.8rem] border border-slate-200 bg-white p-5">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <div className="text-xl font-bold text-slate-900">Daftar Rumah Sakit</div>
-                    <div className="mt-1 text-sm text-slate-500">Tetap tampil untuk admin saat memilih lokasi pendaftaran pasien.</div>
+                    <div className="text-xl font-bold text-slate-900">{copy.hospitalList}</div>
+                    <div className="mt-1 text-sm text-slate-500">{copy.hospitalListDesc}</div>
                   </div>
                   <Link href="/hospitals" className="text-sm font-semibold text-violet-600 hover:text-violet-700">
-                    Buka daftar
+                    {copy.openList}
                   </Link>
                 </div>
 
@@ -807,17 +1278,17 @@ export default function AdminPage() {
                           <div className="mt-1 text-xs uppercase tracking-[0.2em] text-slate-400">ID {hospital.id}</div>
                         </div>
                         <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                          {hospital.activeCount} dokter aktif
+                          {hospital.activeCount} {copy.activeDoctors}
                         </span>
                       </div>
 
                       <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                         <div className="rounded-2xl bg-white px-3 py-2">
-                          <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Total Dokter</div>
+                          <div className="text-xs uppercase tracking-[0.18em] text-slate-400">{copy.totalDoctors}</div>
                           <div className="mt-1 font-bold text-slate-900">{hospital.doctorCount}</div>
                         </div>
                         <div className="rounded-2xl bg-white px-3 py-2">
-                          <div className="text-xs uppercase tracking-[0.18em] text-slate-400">Koordinat</div>
+                          <div className="text-xs uppercase tracking-[0.18em] text-slate-400">{copy.coordinate}</div>
                           <div className="mt-1 font-bold text-slate-900">
                             {hospital.lat}, {hospital.lng}
                           </div>
@@ -831,20 +1302,20 @@ export default function AdminPage() {
               <section className="rounded-[1.8rem] border border-slate-200 bg-white p-5">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <div className="text-xl font-bold text-slate-900">Dokter Terhubung</div>
-                    <div className="mt-1 text-sm text-slate-500">Admin tetap bisa memantau semua dokter dari dashboard utama.</div>
+                    <div className="text-xl font-bold text-slate-900">{copy.connectedDoctors}</div>
+                    <div className="mt-1 text-sm text-slate-500">{copy.connectedDoctorsDesc}</div>
                   </div>
-                  <div className="rounded-full bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-600">Monitoring</div>
+                  <div className="rounded-full bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-600">{copy.monitoring}</div>
                 </div>
 
                 <div className="mt-5 overflow-x-auto">
                   <table className="min-w-full border-separate border-spacing-y-3">
                     <thead>
                       <tr className="text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                        <th className="px-3 py-2">Dokter</th>
-                        <th className="px-3 py-2">Rumah Sakit</th>
-                        <th className="px-3 py-2">Spesialis</th>
-                        <th className="px-3 py-2">Status</th>
+                        <th className="px-3 py-2">{copy.menuDoctor}</th>
+                        <th className="px-3 py-2">{copy.hospital}</th>
+                        <th className="px-3 py-2">{copy.specialty}</th>
+                        <th className="px-3 py-2">{copy.status}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -874,7 +1345,7 @@ export default function AdminPage() {
                                   doctor.available ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700",
                                 )}
                               >
-                                {doctor.available ? "Aktif" : "Penuh"}
+                                {doctor.available ? copy.active : copy.full}
                               </span>
                             </td>
                           </tr>
@@ -884,7 +1355,7 @@ export default function AdminPage() {
                       {!loading && doctors.length === 0 ? (
                         <tr>
                           <td colSpan={4} className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-sm text-slate-500">
-                            Belum ada dokter yang terhubung.
+                            {copy.noConnectedDoctor}
                           </td>
                         </tr>
                       ) : null}
@@ -897,13 +1368,13 @@ export default function AdminPage() {
                     href="/hospitals"
                     className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
                   >
-                    Daftarkan Pasien
+                    {copy.registerPatient}
                   </Link>
                   <Link
                     href="/admin/bookings"
                     className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-3 text-sm font-bold text-white shadow-[0_18px_40px_-22px_rgba(124,58,237,0.65)] transition hover:brightness-105"
                   >
-                    Kelola Booking
+                    {copy.manageBooking}
                   </Link>
                 </div>
               </section>

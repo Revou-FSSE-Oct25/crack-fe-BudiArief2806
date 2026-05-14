@@ -3,6 +3,7 @@
 // Helper session client.
 // File ini hanya menyimpan token, role, dan profil user hasil login dari backend.
 import type { Role, User } from "./types";
+import { applyPreferences, readUserPreferences } from "./preferences";
 
 const TOKEN_KEY = "crack_token";
 const ROLE_KEY = "crack_role";
@@ -40,11 +41,13 @@ export function saveSession(payload: { token: string; role: Role; user: User }) 
   if (!isBrowser()) return;
 
   // Simpan session minimum yang dibutuhkan frontend untuk navigasi dan proteksi halaman.
+  const sessionUser = { ...payload.user, role: payload.role };
   localStorage.setItem(TOKEN_KEY, payload.token);
   localStorage.setItem(ROLE_KEY, payload.role);
-  localStorage.setItem(USER_KEY, JSON.stringify({ ...payload.user, role: payload.role }));
+  localStorage.setItem(USER_KEY, JSON.stringify(sessionUser));
   writeCookie(TOKEN_COOKIE, payload.token, 60 * 60 * 8);
   writeCookie(ROLE_COOKIE, payload.role, 60 * 60 * 8);
+  applyPreferences(readUserPreferences(sessionUser));
 }
 
 export function clearSession() {
@@ -55,6 +58,7 @@ export function clearSession() {
   localStorage.removeItem(USER_KEY);
   clearCookie(TOKEN_COOKIE);
   clearCookie(ROLE_COOKIE);
+  applyPreferences(null);
 }
 
 export function getToken(): string | null {
