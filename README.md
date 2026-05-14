@@ -1,4 +1,4 @@
-# Diabstrok Frontend
+# Diabstrok Frontend Budi Arief 
 
 Frontend Next.js untuk sistem booking layanan diabetes dan stroke. Aplikasi ini terhubung ke backend NestJS sebagai sumber data utama untuk auth, master data rumah sakit, dokter, ruangan, dan booking.
 
@@ -25,36 +25,25 @@ Frontend Next.js untuk sistem booking layanan diabetes dan stroke. Aplikasi ini 
 - Booking flow dari dokter ke rumah sakit
 - Loading state, error state, toast notification, dan confirmation dialog
 
-## Menjalankan frontend
+## Tech frontend & BE
+- Menggunakan Nesxjs dan Nestjs 
+- Tailwind CSS
+- Postgree/Dbeaver (database) Deploy web Neon 
+- Postman/Swagger (get,patch,post and delete endpoint/API )
 
-```bash
-npm install
-npm run dev
-```
+## Keunggulan :
+-  Menggunakan Navbar atau Section Ui/Ux dan responsive stabil ketika tampil di mobile & desktop
 
-Pastikan environment:
 
-```bash
-NEXT_PUBLIC_API_BASE_URL=http://localhost:3001
-```
+## Verifikasi Database  Menggunaakan web Neon 
+<img width="1917" height="903" alt="image" src="https://github.com/user-attachments/assets/ced25dad-6d1b-46ba-be5a-8ca1a7bc06ed" />
 
-## Verifikasi
 
 ```bash
 npm run build
 ```
 
 ## Unit Testing dan Coverage
-
-```bash
-npm run test
-npm run test:cov
-```
-
-Coverage frontend saat ini dilaporkan oleh Vitest ke folder `coverage/` dengan
-reporter `text`, `text-summary`, `json-summary`, dan `lcov`.
-
-Snapshot coverage FE terbaru:
 
 <img width="735" height="445" alt="image" src="https://github.com/user-attachments/assets/d40b106a-e6de-4ebd-bbf6-29dafc820a9d" />
 
