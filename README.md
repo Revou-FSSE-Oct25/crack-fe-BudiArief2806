@@ -56,6 +56,9 @@ reporter `text`, `text-summary`, `json-summary`, dan `lcov`.
 
 Snapshot coverage FE terbaru:
 
+<img width="735" height="445" alt="image" src="https://github.com/user-attachments/assets/d40b106a-e6de-4ebd-bbf6-29dafc820a9d" />
+
+
 - Statements: `92.08%`
 - Branches: `82.65%`
 - Functions: `96.42%`
@@ -69,5 +72,7 @@ untuk integrasi aplikasi:
 - `src/app/lib/schemas.ts`
 - `src/app/lib/types.ts`
 
-Untuk alur end-to-end manual, lihat `docs/e2e-checklist.md`.
-
+## Deploy Link FE : https://crack-fe-budiarief2806-2.onrender.com/
+## Deploy Link Endpoint & BE: https://crack-be-budiarief2806-2.onrender.com/api#/bookings/BookingsController_update
+## Deploy Link Dokter : https://crack-be-budiarief2806-2.onrender.com/doctors
+## Deploy link hospital : https://crack-be-budiarief2806-2.onrender.com/hospitals
