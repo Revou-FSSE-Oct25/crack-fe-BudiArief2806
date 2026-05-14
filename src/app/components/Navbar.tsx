@@ -38,6 +38,15 @@ function navLinkClass(active: boolean) {
   ].join(" ");
 }
 
+function mobileNavLinkClass(active: boolean) {
+  return [
+    "inline-flex items-center justify-center whitespace-nowrap rounded-full border px-4 py-2 text-sm font-semibold transition",
+    active
+      ? "border-violet-200 bg-violet-50 text-violet-700 shadow-sm"
+      : "border-slate-200 bg-white/88 text-slate-600 hover:border-slate-300 hover:text-slate-900",
+  ].join(" ");
+}
+
 const navbarCopy = {
   id: {
     home: "Home",
@@ -183,61 +192,113 @@ export function Navbar() {
         darkMode ? "border-slate-800 bg-slate-950/88" : "border-slate-200/80 bg-white/88",
       ].join(" ")}
     >
-      <div className="mx-auto flex h-[84px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex shrink-0 items-center gap-3">
-          <AppIcon />
-          <span className="text-lg font-black tracking-tight text-transparent bg-gradient-to-r from-teal-700 via-cyan-600 to-violet-600 bg-clip-text sm:text-xl">
-            DIABSTROK
-          </span>
-        </Link>
-
-        <nav className="hidden items-center gap-9 md:flex">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.anchor ? `/${item.href}` : item.href}
-              className={navLinkClass(item.active)}
-            >
-              {item.label}
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col gap-3 py-3 md:h-[84px] md:flex-row md:items-center md:justify-between md:gap-4 md:py-0">
+          <div className="flex items-center justify-between gap-3">
+            <Link href="/" className="flex shrink-0 items-center gap-3">
+              <AppIcon />
+              <span className="bg-gradient-to-r from-teal-700 via-cyan-600 to-violet-600 bg-clip-text text-lg font-black tracking-tight text-transparent sm:text-xl">
+                DIABSTROK
+              </span>
             </Link>
-          ))}
-        </nav>
 
-        <div className="flex items-center gap-3">
-          {!authed ? (
-            <>
+            <div className="flex items-center gap-2 md:hidden">
+              {!authed ? (
+                <>
+                  <Link
+                    href="/signin"
+                    className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+                  >
+                    {copy.signin}
+                  </Link>
+                  <Link
+                    href="/signup"
+                    className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_18px_40px_-24px_rgba(79,70,229,0.7)] transition hover:translate-y-[-1px]"
+                  >
+                    {copy.signup}
+                  </Link>
+                </>
+              ) : (
+                <button
+                  onClick={() => {
+                    clearSession();
+                    router.push("/signin");
+                  }}
+                  className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+                >
+                  {copy.logout}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {authed ? (
+            <div className="rounded-2xl border border-slate-200/80 bg-white/86 px-4 py-3 md:hidden">
+              <p className="text-xs text-slate-500">{copy.signedAs}</p>
+              <p className="text-sm font-semibold text-slate-900">{name || copy.user}</p>
+            </div>
+          ) : null}
+
+          <nav className="hidden items-center gap-9 md:flex">
+            {navItems.map((item) => (
               <Link
-                href="/signin"
-                className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+                key={item.href}
+                href={item.anchor ? `/${item.href}` : item.href}
+                className={navLinkClass(item.active)}
               >
-                {copy.signin}
+                {item.label}
               </Link>
+            ))}
+          </nav>
+
+          <nav className="-mx-1 flex items-center gap-2 overflow-x-auto px-1 pb-1 md:hidden">
+            {navItems.map((item) => (
               <Link
-                href="/signup"
-                className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_18px_40px_-24px_rgba(79,70,229,0.7)] transition hover:translate-y-[-1px]"
+                key={item.href}
+                href={item.anchor ? `/${item.href}` : item.href}
+                className={mobileNavLinkClass(item.active)}
               >
-                {copy.signup}
+                {item.label}
               </Link>
-            </>
-          ) : (
-            <>
-              <div className="hidden rounded-2xl border border-slate-200 bg-white px-4 py-2 text-right sm:block">
-                <p className="text-xs text-slate-500">{copy.signedAs}</p>
-                <p className="text-sm font-semibold text-slate-900">
-                  {name || copy.user}
-                </p>
-              </div>
-              <button
-                onClick={() => {
-                  clearSession();
-                  router.push("/signin");
-                }}
-                className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
-              >
-                {copy.logout}
-              </button>
-            </>
-          )}
+            ))}
+          </nav>
+
+          <div className="hidden items-center gap-3 md:flex">
+            {!authed ? (
+              <>
+                <Link
+                  href="/signin"
+                  className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+                >
+                  {copy.signin}
+                </Link>
+                <Link
+                  href="/signup"
+                  className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_18px_40px_-24px_rgba(79,70,229,0.7)] transition hover:translate-y-[-1px]"
+                >
+                  {copy.signup}
+                </Link>
+              </>
+            ) : (
+              <>
+                <div className="hidden rounded-2xl border border-slate-200 bg-white px-4 py-2 text-right sm:block">
+                  <p className="text-xs text-slate-500">{copy.signedAs}</p>
+                  <p className="text-sm font-semibold text-slate-900">
+                    {name || copy.user}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    clearSession();
+                    router.push("/signin");
+                  }}
+                  className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+                >
+                  {copy.logout}
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </header>

@@ -154,19 +154,19 @@ function StatCard({
   return (
     <div
       className={cls(
-        "rounded-[34px] border border-slate-200/80 bg-white px-7 py-6",
+        "rounded-[28px] border border-slate-200/80 bg-white px-5 py-5 sm:rounded-[34px] sm:px-7 sm:py-6",
         "shadow-[0_20px_55px_-38px_rgba(15,23,42,0.22)]",
         cardGlowMap[tone],
       )}
     >
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-[1.05rem] font-black tracking-tight text-slate-800">{label}</p>
-          <p className="mt-4 text-5xl font-black tracking-tight text-slate-950 sm:text-[4rem]">{value}</p>
+          <p className="text-base font-black tracking-tight text-slate-800 sm:text-[1.05rem]">{label}</p>
+          <p className="mt-4 text-[2.75rem] font-black tracking-tight text-slate-950 sm:text-5xl lg:text-[4rem]">{value}</p>
         </div>
-        <div className={cls("flex h-14 w-14 items-center justify-center rounded-[20px] text-[2rem] leading-none font-black", toneMap[tone])}>+</div>
+        <div className={cls("flex h-12 w-12 items-center justify-center rounded-[18px] text-[1.7rem] leading-none font-black sm:h-14 sm:w-14 sm:rounded-[20px] sm:text-[2rem]", toneMap[tone])}>+</div>
       </div>
-      <p className="mt-5 text-[1.05rem] font-bold text-emerald-500">{hint}</p>
+      <p className="mt-4 text-sm font-bold text-emerald-500 sm:mt-5 sm:text-[1.05rem]">{hint}</p>
     </div>
   );
 }
@@ -298,57 +298,86 @@ export default function HomePage() {
       <Navbar />
 
       <main>
-        <section className="relative min-h-[100svh] overflow-hidden">
-          <Image
-            src="/dokter.png"
-            alt="Dokter profesional DIABSTROK"
-            fill
-            priority
-            className="object-cover object-center"
-          />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.92)_0%,rgba(255,255,255,0.76)_36%,rgba(255,255,255,0.18)_70%,rgba(255,255,255,0.05)_100%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(124,58,237,0.12),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(14,165,233,0.14),transparent_26%)]" />
+        <section className="relative overflow-hidden">
+          <div className="absolute inset-x-0 top-0 -z-10 h-[720px] bg-[radial-gradient(circle_at_top_left,rgba(124,58,237,0.18),transparent_28%),radial-gradient(circle_at_top_right,rgba(56,189,248,0.18),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.94)_0%,rgba(248,250,255,0.98)_48%,rgba(255,255,255,0.92)_100%)]" />
+          <div className="absolute left-[-10%] top-16 -z-10 h-60 w-60 rounded-full bg-violet-200/35 blur-3xl sm:h-80 sm:w-80" />
+          <div className="absolute right-[-14%] top-24 -z-10 h-72 w-72 rounded-full bg-cyan-200/35 blur-3xl sm:h-96 sm:w-96" />
 
-          <div className="relative mx-auto flex min-h-[100svh] max-w-7xl items-center px-4 pb-10 pt-28 sm:px-6 lg:px-8">
-            <div className="max-w-2xl">
+          <div className="relative mx-auto max-w-7xl px-4 pb-14 pt-8 sm:px-6 sm:pb-18 sm:pt-10 lg:px-8 lg:pb-24 lg:pt-14">
+            <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1.02fr)_minmax(320px,0.98fr)] lg:gap-10">
+              <div className="max-w-2xl rounded-[32px] border border-white/70 bg-white/76 p-5 shadow-[0_24px_70px_-42px_rgba(15,23,42,0.3)] backdrop-blur sm:p-8 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none lg:backdrop-blur-none">
               <SectionBadge label="Portal kesehatan terintegrasi" />
 
-              <h1 className="mt-8 text-4xl font-black tracking-tight text-slate-950 sm:text-5xl lg:text-[68px] lg:leading-[1.02]">
+              <h1 className="mt-6 text-[2.35rem] font-black leading-[1.02] tracking-tight text-slate-950 sm:mt-8 sm:text-5xl lg:text-[68px] lg:leading-[1.02]">
                 Pengalaman kesehatan digital yang{" "}
                 <span className="bg-gradient-to-r from-violet-600 to-cyan-500 bg-clip-text text-transparent">
                   elegan, jelas, dan manusiawi.
                 </span>
               </h1>
 
-              <p className="mt-6 max-w-xl text-base leading-8 text-slate-600 sm:text-lg">
+              <p className="mt-5 max-w-xl text-[0.98rem] leading-7 text-slate-600 sm:mt-6 sm:text-lg sm:leading-8">
                 Selamat datang di aplikasi Diabstrok.
                 Setiap  usaha akan memudahkan Anda menemukan jalan keluar. Mulailah langkah Anda di sini untuk menuju kesembuhan.
               </p>
 
-              <div className="mt-10 flex flex-col gap-4 sm:flex-row">
+              <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:gap-4">
                 <Link
                   href="#login-access"
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-7 py-4 text-sm font-semibold text-white shadow-[0_18px_40px_-22px_rgba(79,70,229,0.7)] transition hover:translate-y-[-1px]"
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-7 py-4 text-sm font-semibold text-white shadow-[0_18px_40px_-22px_rgba(79,70,229,0.7)] transition hover:translate-y-[-1px] sm:min-w-[200px]"
                 >
                   Mulai Sekarang
                   <span aria-hidden="true">-&gt;</span>
                 </Link>
                 <Link
                   href={dashboardHref}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white/92 px-7 py-4 text-sm font-semibold text-slate-700 shadow-sm backdrop-blur transition hover:border-slate-300 hover:bg-white"
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white/92 px-7 py-4 text-sm font-semibold text-slate-700 shadow-sm backdrop-blur transition hover:border-slate-300 hover:bg-white sm:min-w-[200px]"
                 >
                   Buka Dashboard
                 </Link>
               </div>
 
-              <div className="mt-12 grid gap-4 sm:grid-cols-3">
+              <div className="mt-8 grid gap-3 sm:mt-12 sm:grid-cols-3 sm:gap-4">
                 {heroStatCards.map((item) => (
-                  <div key={item.label} className="rounded-[24px] border border-white/60 bg-white/78 p-4 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.25)] backdrop-blur">
+                  <div key={item.label} className="rounded-[24px] border border-white/60 bg-white/82 p-4 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.25)] backdrop-blur">
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{item.label}</p>
                     <p className="mt-2 text-3xl font-black text-slate-950">{item.value}</p>
                     <p className="mt-2 text-sm text-slate-500">{item.hint}</p>
                   </div>
                 ))}
+              </div>
+            </div>
+
+              <div className="relative">
+                <div className="absolute inset-x-10 top-6 h-24 rounded-full bg-violet-200/45 blur-3xl sm:inset-x-16 sm:h-28" />
+                <div className="relative overflow-hidden rounded-[34px] border border-white/70 bg-[linear-gradient(160deg,rgba(255,255,255,0.88),rgba(240,249,255,0.74))] p-3 shadow-[0_32px_90px_-48px_rgba(15,23,42,0.35)]">
+                  <div className="relative min-h-[340px] overflow-hidden rounded-[26px] bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.92),rgba(226,232,240,0.5)_48%,rgba(219,234,254,0.56)_100%)] sm:min-h-[440px] lg:min-h-[640px]">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(191,219,254,0.7),transparent_36%),radial-gradient(circle_at_top_left,rgba(233,213,255,0.58),transparent_36%)]" />
+                    <Image
+                      src="/dokter.png"
+                      alt="Dokter profesional DIABSTROK"
+                      fill
+                      priority
+                      sizes="(min-width: 1024px) 42vw, (min-width: 640px) 70vw, 100vw"
+                      className="object-cover object-[center_top]"
+                    />
+                    <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.2)_0%,rgba(255,255,255,0.08)_44%,rgba(255,255,255,0.9)_100%)]" />
+
+                    <div className="absolute left-4 top-4 rounded-full border border-white/80 bg-white/88 px-3 py-2 text-[11px] font-bold uppercase tracking-[0.18em] text-violet-600 shadow-sm backdrop-blur sm:left-6 sm:top-6">
+                      Konsultasi modern
+                    </div>
+
+                    <div className="absolute inset-x-4 bottom-4 grid gap-3 sm:inset-x-6 sm:bottom-6 sm:grid-cols-2">
+                      <div className="rounded-[24px] border border-white/70 bg-white/86 p-4 shadow-[0_16px_40px_-28px_rgba(15,23,42,0.35)] backdrop-blur">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Alur lebih jelas</p>
+                        <p className="mt-2 text-sm leading-6 text-slate-700">Booking, pilih dokter, dan akses dashboard terasa rapi bahkan di layar kecil.</p>
+                      </div>
+                      <div className="rounded-[24px] border border-white/70 bg-slate-950/88 p-4 text-white shadow-[0_18px_44px_-26px_rgba(15,23,42,0.55)] backdrop-blur">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-200">Akses cepat</p>
+                        <p className="mt-2 text-sm leading-6 text-slate-200">Masuk ke portal kapan saja untuk memantau rumah sakit, dokter, dan status booking.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -361,7 +390,7 @@ export default function HomePage() {
         ) : null}
 
         <section id="dashboard-preview" className="mx-auto max-w-7xl px-4 pb-18 pt-2 sm:px-6 lg:px-8">
-          <div className="relative overflow-hidden rounded-[42px] border border-slate-200/80 bg-white/95 px-6 py-8 shadow-[0_32px_90px_-48px_rgba(15,23,42,0.22)] backdrop-blur sm:px-8 sm:py-10 lg:px-14 lg:py-18">
+          <div className="relative overflow-hidden rounded-[30px] border border-slate-200/80 bg-white/95 px-5 py-7 shadow-[0_32px_90px_-48px_rgba(15,23,42,0.22)] backdrop-blur sm:rounded-[42px] sm:px-8 sm:py-10 lg:px-14 lg:py-18">
             <div className="pointer-events-none absolute inset-y-0 left-0 w-72 bg-[radial-gradient(circle_at_left_bottom,rgba(191,219,254,0.28),transparent_62%)]" />
             <div className="pointer-events-none absolute right-[-6%] top-[-10%] h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(191,219,254,0.18),transparent_68%)]" />
             <div className="pointer-events-none absolute bottom-[-14%] left-[-8%] h-64 w-64 rounded-full border border-violet-100/70" />
@@ -370,9 +399,9 @@ export default function HomePage() {
             <div className="relative">
               <SectionBadge label="Keunggulan platform" />
 
-              <div className="mt-10 grid gap-10 lg:grid-cols-[1.12fr_0.88fr] lg:items-start">
+              <div className="mt-8 grid gap-8 sm:mt-10 lg:grid-cols-[1.12fr_0.88fr] lg:items-start lg:gap-10">
                 <div className="max-w-4xl">
-                  <h2 className="text-[2rem] font-black tracking-tight text-slate-950 sm:text-[2.5rem] sm:leading-[1.2] lg:text-[3.15rem] lg:leading-[1.24]">
+                  <h2 className="text-[1.9rem] font-black tracking-tight text-slate-950 sm:text-[2.35rem] sm:leading-[1.2] lg:text-[3.15rem] lg:leading-[1.24]">
                     Diabstroke hadir untuk memudahkan Anda menemukan dokter yang tersedia, sehingga Anda dapat memperoleh
                     penanganan yang tepat tanpa harus menunggu terlalu lama.
                   </h2>
@@ -390,13 +419,13 @@ export default function HomePage() {
         </section>
 
         <section id="login-access" className="mx-auto max-w-7xl px-4 pb-18 sm:px-6 lg:px-8">
-          <div className="rounded-[32px] border border-slate-200/80 bg-[linear-gradient(135deg,#0f172a_0%,#111827_48%,#1e1b4b_100%)] p-6 text-white shadow-[0_30px_90px_-52px_rgba(15,23,42,0.75)] sm:p-8">
+          <div className="rounded-[28px] border border-slate-200/80 bg-[linear-gradient(135deg,#0f172a_0%,#111827_48%,#1e1b4b_100%)] p-5 text-white shadow-[0_30px_90px_-52px_rgba(15,23,42,0.75)] sm:rounded-[32px] sm:p-8">
             <SectionBadge label="Alur klien" />
 
             <div className="mt-6">
               <div className="grid gap-4 sm:grid-cols-2">
                 {clientSteps.map((item) => (
-                  <div key={item.step} className="rounded-[26px] border border-white/10 bg-white/6 p-5 backdrop-blur">
+                  <div key={item.step} className="rounded-[24px] border border-white/10 bg-white/6 p-4 backdrop-blur sm:rounded-[26px] sm:p-5">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-sm font-black text-cyan-200">
                         {item.step}
@@ -431,9 +460,9 @@ export default function HomePage() {
 
           <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h2 className="text-3xl font-black tracking-tight text-slate-950">Dokter Specialis </h2>
+              <h2 className="text-[1.9rem] font-black tracking-tight text-slate-950 sm:text-3xl">Dokter Specialis </h2>
             </div>
-            <Link href="/doctors" className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50">
+            <Link href="/doctors" className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-3 text-center text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 sm:w-auto">
               Buka Semua Dokter
             </Link>
           </div>
@@ -508,10 +537,10 @@ export default function HomePage() {
 
           <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h2 className="text-3xl font-black tracking-tight text-slate-950">Rumah sakit (hospital)</h2>
+              <h2 className="text-[1.9rem] font-black tracking-tight text-slate-950 sm:text-3xl">Rumah sakit (hospital)</h2>
             
             </div>
-            <Link href="/hospitals" className="rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-[0_18px_40px_-24px_rgba(79,70,229,0.7)] transition hover:translate-y-[-1px]">
+            <Link href="/hospitals" className="w-full rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-3 text-center text-sm font-bold text-white shadow-[0_18px_40px_-24px_rgba(79,70,229,0.7)] transition hover:translate-y-[-1px] sm:w-auto">
               Lihat Semua Rumah Sakit
             </Link>
           </div>
@@ -523,7 +552,7 @@ export default function HomePage() {
               return (
                 <article
                   key={hospital.id}
-                  className="mesh-panel relative overflow-hidden rounded-[30px] border border-slate-200/80 p-6 shadow-[0_20px_55px_-38px_rgba(15,23,42,0.28)]"
+                  className="mesh-panel relative overflow-hidden rounded-[28px] border border-slate-200/80 p-5 shadow-[0_20px_55px_-38px_rgba(15,23,42,0.28)] sm:rounded-[30px] sm:p-6"
                 >
                   <div className={cls("pointer-events-none absolute inset-x-0 top-0 h-36 bg-gradient-to-r opacity-90", visual.glow)} />
 
@@ -539,12 +568,12 @@ export default function HomePage() {
                         <div className="mt-2 text-xs uppercase tracking-[0.24em] text-slate-400">ID {hospital.id}</div>
                       </div>
 
-                      <div className="flex items-center gap-3 self-start lg:flex-col lg:items-end">
+                      <div className="flex flex-col items-stretch gap-3 self-stretch sm:self-start lg:items-end">
                         <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-violet-600 shadow-sm">
                           {hospital.availableCount} dokter aktif
                         </span>
 
-                        <div className={cls("relative flex h-36 w-60 items-center justify-center overflow-hidden rounded-[28px] border shadow-[0_20px_38px_-24px_rgba(15,23,42,0.35)]", visual.frame)}>
+                        <div className={cls("relative flex h-32 w-full items-center justify-center overflow-hidden rounded-[24px] border shadow-[0_20px_38px_-24px_rgba(15,23,42,0.35)] sm:h-36 sm:w-60 sm:rounded-[28px]", visual.frame)}>
                           {visual.src ? (
                             <Image
                               src={visual.src}
