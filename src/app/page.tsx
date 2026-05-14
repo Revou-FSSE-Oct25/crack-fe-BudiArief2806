@@ -298,66 +298,66 @@ export default function HomePage() {
       <Navbar />
 
       <main>
-        <section className="relative overflow-hidden">
+        <section className="relative overflow-hidden lg:hidden">
           <div className="absolute inset-x-0 top-0 -z-10 h-[720px] bg-[radial-gradient(circle_at_top_left,rgba(124,58,237,0.18),transparent_28%),radial-gradient(circle_at_top_right,rgba(56,189,248,0.18),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.94)_0%,rgba(248,250,255,0.98)_48%,rgba(255,255,255,0.92)_100%)]" />
           <div className="absolute left-[-10%] top-16 -z-10 h-60 w-60 rounded-full bg-violet-200/35 blur-3xl sm:h-80 sm:w-80" />
           <div className="absolute right-[-14%] top-24 -z-10 h-72 w-72 rounded-full bg-cyan-200/35 blur-3xl sm:h-96 sm:w-96" />
 
-          <div className="relative mx-auto max-w-7xl px-4 pb-14 pt-8 sm:px-6 sm:pb-18 sm:pt-10 lg:px-8 lg:pb-24 lg:pt-14">
-            <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1.02fr)_minmax(320px,0.98fr)] lg:gap-10">
-              <div className="max-w-2xl rounded-[32px] border border-white/70 bg-white/76 p-5 shadow-[0_24px_70px_-42px_rgba(15,23,42,0.3)] backdrop-blur sm:p-8 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none lg:backdrop-blur-none">
-              <SectionBadge label="Portal kesehatan terintegrasi" />
+          <div className="relative mx-auto max-w-7xl px-4 pb-14 pt-8 sm:px-6 sm:pb-18 sm:pt-10">
+            <div className="grid items-center gap-8">
+              <div className="max-w-2xl rounded-[32px] border border-white/70 bg-white/76 p-5 shadow-[0_24px_70px_-42px_rgba(15,23,42,0.3)] backdrop-blur sm:p-8">
+                <SectionBadge label="Portal kesehatan terintegrasi" />
 
-              <h1 className="mt-6 text-[2.35rem] font-black leading-[1.02] tracking-tight text-slate-950 sm:mt-8 sm:text-5xl lg:text-[68px] lg:leading-[1.02]">
-                Pengalaman kesehatan digital yang{" "}
-                <span className="bg-gradient-to-r from-violet-600 to-cyan-500 bg-clip-text text-transparent">
-                  elegan, jelas, dan manusiawi.
-                </span>
-              </h1>
+                <h1 className="mt-6 text-[2.35rem] font-black leading-[1.02] tracking-tight text-slate-950 sm:mt-8 sm:text-5xl">
+                  Pengalaman kesehatan digital yang{" "}
+                  <span className="bg-gradient-to-r from-violet-600 to-cyan-500 bg-clip-text text-transparent">
+                    elegan, jelas, dan manusiawi.
+                  </span>
+                </h1>
 
-              <p className="mt-5 max-w-xl text-[0.98rem] leading-7 text-slate-600 sm:mt-6 sm:text-lg sm:leading-8">
-                Selamat datang di aplikasi Diabstrok.
-                Setiap  usaha akan memudahkan Anda menemukan jalan keluar. Mulailah langkah Anda di sini untuk menuju kesembuhan.
-              </p>
+                <p className="mt-5 max-w-xl text-[0.98rem] leading-7 text-slate-600 sm:mt-6 sm:text-lg sm:leading-8">
+                  Selamat datang di aplikasi Diabstrok.
+                  Setiap usaha akan memudahkan Anda menemukan jalan keluar. Mulailah langkah Anda di sini untuk menuju kesembuhan.
+                </p>
 
-              <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:gap-4">
-                <Link
-                  href="#login-access"
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-7 py-4 text-sm font-semibold text-white shadow-[0_18px_40px_-22px_rgba(79,70,229,0.7)] transition hover:translate-y-[-1px] sm:min-w-[200px]"
-                >
-                  Mulai Sekarang
-                  <span aria-hidden="true">-&gt;</span>
-                </Link>
-                <Link
-                  href={dashboardHref}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white/92 px-7 py-4 text-sm font-semibold text-slate-700 shadow-sm backdrop-blur transition hover:border-slate-300 hover:bg-white sm:min-w-[200px]"
-                >
-                  Buka Dashboard
-                </Link>
+                <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:gap-4">
+                  <Link
+                    href="#login-access"
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-7 py-4 text-sm font-semibold text-white shadow-[0_18px_40px_-22px_rgba(79,70,229,0.7)] transition hover:translate-y-[-1px] sm:min-w-[200px]"
+                  >
+                    Mulai Sekarang
+                    <span aria-hidden="true">-&gt;</span>
+                  </Link>
+                  <Link
+                    href={dashboardHref}
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white/92 px-7 py-4 text-sm font-semibold text-slate-700 shadow-sm backdrop-blur transition hover:border-slate-300 hover:bg-white sm:min-w-[200px]"
+                  >
+                    Buka Dashboard
+                  </Link>
+                </div>
+
+                <div className="mt-8 grid gap-3 sm:mt-12 sm:grid-cols-3 sm:gap-4">
+                  {heroStatCards.map((item) => (
+                    <div key={item.label} className="rounded-[24px] border border-white/60 bg-white/82 p-4 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.25)] backdrop-blur">
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{item.label}</p>
+                      <p className="mt-2 text-3xl font-black text-slate-950">{item.value}</p>
+                      <p className="mt-2 text-sm text-slate-500">{item.hint}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
-
-              <div className="mt-8 grid gap-3 sm:mt-12 sm:grid-cols-3 sm:gap-4">
-                {heroStatCards.map((item) => (
-                  <div key={item.label} className="rounded-[24px] border border-white/60 bg-white/82 p-4 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.25)] backdrop-blur">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{item.label}</p>
-                    <p className="mt-2 text-3xl font-black text-slate-950">{item.value}</p>
-                    <p className="mt-2 text-sm text-slate-500">{item.hint}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
 
               <div className="relative">
                 <div className="absolute inset-x-10 top-6 h-24 rounded-full bg-violet-200/45 blur-3xl sm:inset-x-16 sm:h-28" />
                 <div className="relative overflow-hidden rounded-[34px] border border-white/70 bg-[linear-gradient(160deg,rgba(255,255,255,0.88),rgba(240,249,255,0.74))] p-3 shadow-[0_32px_90px_-48px_rgba(15,23,42,0.35)]">
-                  <div className="relative min-h-[340px] overflow-hidden rounded-[26px] bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.92),rgba(226,232,240,0.5)_48%,rgba(219,234,254,0.56)_100%)] sm:min-h-[440px] lg:min-h-[640px]">
+                  <div className="relative min-h-[340px] overflow-hidden rounded-[26px] bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.92),rgba(226,232,240,0.5)_48%,rgba(219,234,254,0.56)_100%)] sm:min-h-[440px]">
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(191,219,254,0.7),transparent_36%),radial-gradient(circle_at_top_left,rgba(233,213,255,0.58),transparent_36%)]" />
                     <Image
                       src="/dokter.png"
                       alt="Dokter profesional DIABSTROK"
                       fill
                       priority
-                      sizes="(min-width: 1024px) 42vw, (min-width: 640px) 70vw, 100vw"
+                      sizes="(min-width: 640px) 70vw, 100vw"
                       className="object-cover object-[center_top]"
                     />
                     <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.2)_0%,rgba(255,255,255,0.08)_44%,rgba(255,255,255,0.9)_100%)]" />
@@ -378,6 +378,63 @@ export default function HomePage() {
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="relative hidden min-h-[100svh] overflow-hidden lg:block">
+          <Image
+            src="/dokter.png"
+            alt="Dokter profesional DIABSTROK"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.92)_0%,rgba(255,255,255,0.76)_36%,rgba(255,255,255,0.18)_70%,rgba(255,255,255,0.05)_100%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(124,58,237,0.12),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(14,165,233,0.14),transparent_26%)]" />
+
+          <div className="relative mx-auto flex min-h-[100svh] max-w-7xl items-center px-6 pb-10 pt-28 lg:px-8">
+            <div className="max-w-2xl">
+              <SectionBadge label="Portal kesehatan terintegrasi" />
+
+              <h1 className="mt-8 text-5xl font-black tracking-tight text-slate-950 lg:text-[68px] lg:leading-[1.02]">
+                Pengalaman kesehatan digital yang{" "}
+                <span className="bg-gradient-to-r from-violet-600 to-cyan-500 bg-clip-text text-transparent">
+                  elegan, jelas, dan manusiawi.
+                </span>
+              </h1>
+
+              <p className="mt-6 max-w-xl text-lg leading-8 text-slate-600">
+                Selamat datang di aplikasi Diabstrok.
+                Setiap usaha akan memudahkan Anda menemukan jalan keluar. Mulailah langkah Anda di sini untuk menuju kesembuhan.
+              </p>
+
+              <div className="mt-10 flex gap-4">
+                <Link
+                  href="#login-access"
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-7 py-4 text-sm font-semibold text-white shadow-[0_18px_40px_-22px_rgba(79,70,229,0.7)] transition hover:translate-y-[-1px]"
+                >
+                  Mulai Sekarang
+                  <span aria-hidden="true">-&gt;</span>
+                </Link>
+                <Link
+                  href={dashboardHref}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white/92 px-7 py-4 text-sm font-semibold text-slate-700 shadow-sm backdrop-blur transition hover:border-slate-300 hover:bg-white"
+                >
+                  Buka Dashboard
+                </Link>
+              </div>
+
+              <div className="mt-12 grid gap-4 sm:grid-cols-3">
+                {heroStatCards.map((item) => (
+                  <div key={item.label} className="rounded-[24px] border border-white/60 bg-white/78 p-4 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.25)] backdrop-blur">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{item.label}</p>
+                    <p className="mt-2 text-3xl font-black text-slate-950">{item.value}</p>
+                    <p className="mt-2 text-sm text-slate-500">{item.hint}</p>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

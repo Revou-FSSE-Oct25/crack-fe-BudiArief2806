@@ -6,9 +6,11 @@ import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/app/components/Navbar";
+import { PaymentSimulationModal } from "@/app/components/PaymentSimulationModal";
 import { useToast } from "@/app/components/Toast";
 import { api } from "@/app/lib/api";
 import { getUser } from "@/app/lib/auth";
+import { savePendingPaymentSimulation, type PaymentSimulationRecord } from "@/app/lib/payment-simulation";
 import { createAdminWalkInBookingSchema, createBookingSchema } from "@/app/lib/schemas";
 import { useSessionPreferences } from "@/app/lib/use-preferences";
 import type { DoctorRecord, Hospital, HospitalRecord, RoomRecord, Specialty, User } from "@/app/lib/types";
@@ -144,6 +146,19 @@ const hospitalsCopy = {
     userSuccessDesc: "Data booking sudah dikirim ke backend resmi.",
     createError: "Gagal membuat booking",
     createErrorTitle: "Booking gagal",
+    paymentTitle: "Pembayaran Simulasi QR",
+    paymentSubtitle: "Scan QR ini sebagai simulasi pembayaran booking rumah sakit. Setelah itu tekan tombol konfirmasi agar booking tercatat sudah dibayar.",
+    paymentPending: "Menunggu pembayaran",
+    confirmPayment: "Lanjut upload bukti",
+    payLater: "Nanti saja",
+    paymentConfirmedTitle: "Booking siap unggah bukti bayar",
+    paymentConfirmedDesc: "Lanjutkan ke riwayat booking untuk upload foto bukti pembayaran sebelum admin meneruskan ke dokter.",
+    paymentLaterTitle: "Pembayaran bisa dilanjutkan nanti",
+    paymentLaterDesc: "Booking tetap dibuat dan bisa kamu bayar dari halaman My Bookings.",
+    summaryHospital: "Rumah sakit",
+    summaryDoctor: "Dokter",
+    summaryRoom: "Ruangan",
+    summaryTotal: "Total simulasi",
   },
   en: {
     adminLabel: "Admin Walk-In Registration",
@@ -211,6 +226,19 @@ const hospitalsCopy = {
     userSuccessDesc: "Booking data has been sent to the official backend.",
     createError: "Failed to create booking",
     createErrorTitle: "Booking failed",
+    paymentTitle: "QR Payment Simulation",
+    paymentSubtitle: "Scan this QR as a hospital booking payment simulation. Then press confirm so the booking is marked as paid.",
+    paymentPending: "Awaiting payment",
+    confirmPayment: "Continue to proof upload",
+    payLater: "Later",
+    paymentConfirmedTitle: "Booking ready for payment proof upload",
+    paymentConfirmedDesc: "Continue to My Bookings to upload payment proof before admin forwards it to the doctor.",
+    paymentLaterTitle: "You can pay later",
+    paymentLaterDesc: "The booking was still created and can be paid later from the My Bookings page.",
+    summaryHospital: "Hospital",
+    summaryDoctor: "Doctor",
+    summaryRoom: "Room",
+    summaryTotal: "Simulation total",
   },
 };
 
@@ -235,6 +263,8 @@ export default function HospitalsPage() {
   const [saving, setSaving] = useState(false);
   const [userLoc, setUserLoc] = useState<UserLoc | null>(null);
   const [locError, setLocError] = useState("");
+  const [paymentDraft, setPaymentDraft] = useState<PaymentSimulationRecord | null>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const isAdmin = viewer?.role === "admin";
 
@@ -456,7 +486,7 @@ export default function HospitalsPage() {
 
     try {
       // Payload booking dikirim ke backend NestJS untuk divalidasi dan disimpan.
-      await api.createBooking(parsed.data);
+      const res = await api.createBooking(parsed.data);
       showToast({
         tone: "success",
         title: isAdmin ? copy.adminSuccessTitle : copy.userSuccessTitle,
@@ -464,7 +494,16 @@ export default function HospitalsPage() {
           ? copy.adminSuccessDesc
           : copy.userSuccessDesc,
       });
-      router.push(isAdmin ? "/admin/bookings" : "/my-bookings");
+
+      if (isAdmin) {
+        router.push("/admin/bookings");
+        return;
+      }
+
+      // User biasa diarahkan dulu ke simulasi QR agar alur demo pembayaran terasa utuh.
+      const payment = savePendingPaymentSimulation(res.item);
+      setPaymentDraft(payment);
+      setShowPaymentModal(true);
     } catch (err: any) {
       const message = err?.message || copy.createError;
       setError(message);
@@ -472,6 +511,26 @@ export default function HospitalsPage() {
     } finally {
       setSaving(false);
     }
+  }
+
+  function closePaymentModal() {
+    setShowPaymentModal(false);
+    showToast({
+      tone: "success",
+      title: copy.paymentLaterTitle,
+      description: copy.paymentLaterDesc,
+    });
+    router.push("/my-bookings");
+  }
+
+  function confirmPaymentAndContinue() {
+    setShowPaymentModal(false);
+    showToast({
+      tone: "success",
+      title: copy.paymentConfirmedTitle,
+      description: copy.paymentConfirmedDesc,
+    });
+    router.push("/my-bookings");
   }
 
   return (
@@ -484,6 +543,23 @@ export default function HospitalsPage() {
       )}
     >
       <Navbar />
+      <PaymentSimulationModal
+        open={showPaymentModal}
+        title={copy.paymentTitle}
+        subtitle={copy.paymentSubtitle}
+        pendingText={copy.paymentPending}
+        confirmText={copy.confirmPayment}
+        laterText={copy.payLater}
+        summaryLabels={{
+          hospital: copy.summaryHospital,
+          doctor: copy.summaryDoctor,
+          room: copy.summaryRoom,
+          total: copy.summaryTotal,
+        }}
+        payment={paymentDraft}
+        onClose={closePaymentModal}
+        onConfirm={confirmPaymentAndContinue}
+      />
 
       <div className="mx-auto max-w-7xl px-4 pb-20 pt-10 sm:px-6 lg:px-8">
         <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">

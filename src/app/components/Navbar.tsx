@@ -193,7 +193,7 @@ export function Navbar() {
       ].join(" ")}
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-3 py-3 md:h-[84px] md:flex-row md:items-center md:justify-between md:gap-4 md:py-0">
+        <div className="flex flex-col gap-3 py-3 md:hidden">
           <div className="flex items-center justify-between gap-3">
             <Link href="/" className="flex shrink-0 items-center gap-3">
               <AppIcon />
@@ -202,7 +202,7 @@ export function Navbar() {
               </span>
             </Link>
 
-            <div className="flex items-center gap-2 md:hidden">
+            <div className="flex items-center gap-2">
               {!authed ? (
                 <>
                   <Link
@@ -233,11 +233,32 @@ export function Navbar() {
           </div>
 
           {authed ? (
-            <div className="rounded-2xl border border-slate-200/80 bg-white/86 px-4 py-3 md:hidden">
+            <div className="rounded-2xl border border-slate-200/80 bg-white/86 px-4 py-3">
               <p className="text-xs text-slate-500">{copy.signedAs}</p>
               <p className="text-sm font-semibold text-slate-900">{name || copy.user}</p>
             </div>
           ) : null}
+
+          <nav className="-mx-1 flex items-center gap-2 overflow-x-auto px-1 pb-1">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.anchor ? `/${item.href}` : item.href}
+                className={mobileNavLinkClass(item.active)}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
+
+        <div className="hidden h-[84px] items-center justify-between gap-4 md:flex">
+          <Link href="/" className="flex shrink-0 items-center gap-3">
+            <AppIcon />
+            <span className="bg-gradient-to-r from-teal-700 via-cyan-600 to-violet-600 bg-clip-text text-lg font-black tracking-tight text-transparent sm:text-xl">
+              DIABSTROK
+            </span>
+          </Link>
 
           <nav className="hidden items-center gap-9 md:flex">
             {navItems.map((item) => (
@@ -251,19 +272,7 @@ export function Navbar() {
             ))}
           </nav>
 
-          <nav className="-mx-1 flex items-center gap-2 overflow-x-auto px-1 pb-1 md:hidden">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.anchor ? `/${item.href}` : item.href}
-                className={mobileNavLinkClass(item.active)}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-
-          <div className="hidden items-center gap-3 md:flex">
+          <div className="flex items-center gap-3">
             {!authed ? (
               <>
                 <Link

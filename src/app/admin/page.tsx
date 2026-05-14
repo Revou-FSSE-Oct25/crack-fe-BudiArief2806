@@ -4,7 +4,7 @@
 // Halaman ini hanya untuk admin dan tetap menampilkan rumah sakit, dokter, serta ringkasan operasional.
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { RoleGate } from "@/app/components/RoleGate";
 import { clearSession, getUser } from "@/app/lib/auth";
 import { api } from "@/app/lib/api";
@@ -27,6 +27,13 @@ function initials(name: string) {
 function formatDateLabel(value: Date) {
   return value.toLocaleDateString("id-ID", {
     day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+function formatPeriodLabel(value: Date) {
+  return value.toLocaleDateString("id-ID", {
     month: "long",
     year: "numeric",
   });
@@ -140,6 +147,8 @@ type MetricCard = {
   bubble: string;
 };
 
+const CLEARED_REPORT_BOOKING_IDS_KEY = "diabstrok_cleared_report_booking_ids_v1";
+
 const adminCopy = {
   id: {
     adminDashboard: "Admin Dashboard",
@@ -172,9 +181,9 @@ const adminCopy = {
     averageCost: "Rata-rata Biaya",
     soldMedicine: "Obat Terjual",
     financeReport: "Laporan Keuangan",
-    financeReportDesc: "Ringkasan biaya dari booking yang sudah memiliki review dokter.",
+    financeReportDesc: "Ringkasan biaya dari booking yang sudah diselesaikan admin.",
     soldMedicineList: "Daftar Obat Terjual",
-    soldMedicineDesc: "Diambil dari daftar resep yang dikirim dokter ke admin.",
+    soldMedicineDesc: "Diambil dari resep pada case yang sudah ditutup admin.",
     medicineTypes: "jenis obat",
     medicineName: "Nama Obat",
     price: "Harga",
@@ -223,6 +232,22 @@ const adminCopy = {
     noConnectedDoctor: "Belum ada dokter yang terhubung.",
     registerPatient: "Daftarkan Pasien",
     manageBooking: "Kelola Booking",
+    printAndClean: "Cetak PDF & Bersihkan",
+    reportCleaned: "Laporan selesai dicetak dan dibersihkan dari panel.",
+    nothingToPrint: "Belum ada data laporan yang bisa dicetak.",
+    reportArchiveNote: "Data sumber booking tetap aman, hanya ringkasan report yang dibersihkan setelah cetak.",
+    reportEmptyAfterPrint: "Laporan sudah dicetak. Panel report saat ini bersih dan menunggu data baru.",
+    printDate: "Tanggal Cetak",
+    period: "Periode",
+    financialSummary: "Ringkasan Keuangan",
+    financialSummaryDesc: "Ringkasan pendapatan dari booking yang sudah diselesaikan admin.",
+    notesTitle: "Catatan",
+    notesLineOne: "Laporan ini dibuat otomatis oleh sistem Diabstrok berdasarkan data transaksi yang telah diverifikasi.",
+    notesLineTwo: "Laporan ini digunakan untuk keperluan rekapitulasi dan pengambilan keputusan administratif.",
+    adminSignature: "Tanda Tangan Admin",
+    documentFooter: "Dokumen ini dibuat otomatis oleh sistem Diabstrok",
+    pageLabel: "Halaman 1 / 1",
+    grandTotal: "TOTAL",
   },
   en: {
     adminDashboard: "Admin Dashboard",
@@ -239,7 +264,7 @@ const adminCopy = {
     reportTitle: "Reports",
     dashboardTitle: "Dashboard",
     settingsTitle: "Settings",
-    reportSubtitle: "Financial report and medicine sales from doctor reviews.",
+    reportSubtitle: "Financial report and medicine sales from cases completed by admin.",
     settingsSubtitle: "Manage admin profile, contact, theme, language, and account logout access.",
     welcome: "Welcome back",
     metricActiveBookings: "Active Bookings",
@@ -255,9 +280,9 @@ const adminCopy = {
     averageCost: "Average Cost",
     soldMedicine: "Medicine Sold",
     financeReport: "Financial Report",
-    financeReportDesc: "Cost summary from bookings that already have doctor reviews.",
+    financeReportDesc: "Cost summary from bookings that have already been completed by admin.",
     soldMedicineList: "Sold Medicine List",
-    soldMedicineDesc: "Collected from prescriptions sent by doctors to admin.",
+    soldMedicineDesc: "Collected from prescriptions in cases that have been closed by admin.",
     medicineTypes: "medicine types",
     medicineName: "Medicine Name",
     price: "Price",
@@ -306,6 +331,22 @@ const adminCopy = {
     noConnectedDoctor: "No connected doctors yet.",
     registerPatient: "Register Patient",
     manageBooking: "Manage Booking",
+    printAndClean: "Print PDF & Clean",
+    reportCleaned: "The report was printed and cleared from the panel.",
+    nothingToPrint: "There is no report data available to print yet.",
+    reportArchiveNote: "Source booking data stays safe. Only the report summary is cleared after printing.",
+    reportEmptyAfterPrint: "The report has been printed. This panel is now clean and waiting for new data.",
+    printDate: "Print Date",
+    period: "Period",
+    financialSummary: "Financial Summary",
+    financialSummaryDesc: "Revenue summary from bookings that have already been completed by admin.",
+    notesTitle: "Notes",
+    notesLineOne: "This report was generated automatically by the Diabstrok system based on verified transaction data.",
+    notesLineTwo: "This report is used for recap and administrative decision-making needs.",
+    adminSignature: "Admin Signature",
+    documentFooter: "This document was generated automatically by the Diabstrok system",
+    pageLabel: "Page 1 / 1",
+    grandTotal: "TOTAL",
   },
 };
 
@@ -400,8 +441,10 @@ export default function AdminPage() {
   const [darkMode, setDarkMode] = useState(false);
   const [language, setLanguage] = useState<"id" | "en">("id");
   const [settingsSaved, setSettingsSaved] = useState("");
+  const [clearedReportBookingIds, setClearedReportBookingIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const pendingPrintedIdsRef = useRef<string[]>([]);
 
   useEffect(() => {
     let mounted = true;
@@ -415,6 +458,16 @@ export default function AdminPage() {
     setDarkMode(preferences?.darkMode || false);
     setLanguage(preferences?.language || "id");
     applyPreferences(preferences);
+    if (typeof window !== "undefined") {
+      const storedIds = window.localStorage.getItem(CLEARED_REPORT_BOOKING_IDS_KEY);
+      if (storedIds) {
+        try {
+          setClearedReportBookingIds(JSON.parse(storedIds));
+        } catch {
+          setClearedReportBookingIds([]);
+        }
+      }
+    }
 
     async function load() {
       setLoading(true);
@@ -446,6 +499,23 @@ export default function AdminPage() {
       mounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    function handleAfterPrint() {
+      if (!pendingPrintedIdsRef.current.length) return;
+
+      setClearedReportBookingIds((current) => {
+        const next = Array.from(new Set([...current, ...pendingPrintedIdsRef.current]));
+        window.localStorage.setItem(CLEARED_REPORT_BOOKING_IDS_KEY, JSON.stringify(next));
+        return next;
+      });
+      pendingPrintedIdsRef.current = [];
+      setSettingsSaved(adminCopy[language].reportCleaned);
+    }
+
+    window.addEventListener("afterprint", handleAfterPrint);
+    return () => window.removeEventListener("afterprint", handleAfterPrint);
+  }, [language]);
 
   const copy = adminCopy[language];
 
@@ -586,7 +656,12 @@ export default function AdminPage() {
   );
 
   const reportData = useMemo(() => {
-    const reviewedBookings = bookings.filter((booking) => booking.doctorReview || booking.prescription);
+    const reviewedBookings = bookings.filter(
+      (booking) =>
+        booking.status === "COMPLETED" &&
+        (booking.doctorReview || booking.prescription) &&
+        !clearedReportBookingIds.includes(booking.id),
+    );
     const totalRevenue = reviewedBookings.reduce(
       (sum, booking) => sum + (booking.doctorReview?.estimatedCost || 0),
       0,
@@ -619,7 +694,7 @@ export default function AdminPage() {
       soldMedicineCount: soldMedicines.reduce((sum, item) => sum + item.count, 0),
       averageRevenue: reviewedBookings.length ? Math.round(totalRevenue / reviewedBookings.length) : 0,
     };
-  }, [bookings]);
+  }, [bookings, clearedReportBookingIds]);
 
   const reportMetricCards = useMemo(
     () => [
@@ -661,6 +736,8 @@ export default function AdminPage() {
     ],
   );
 
+  const printReportRows = useMemo(() => reportData.soldMedicines.slice(0, 6), [reportData.soldMedicines]);
+
   function saveSettings() {
     if (!viewer) return;
 
@@ -700,6 +777,17 @@ export default function AdminPage() {
     applyPreferences(nextPreferences);
   }
 
+  function handlePrintReport() {
+    if (!reportData.reviewedBookings.length) {
+      setSettingsSaved(copy.nothingToPrint);
+      return;
+    }
+
+    pendingPrintedIdsRef.current = reportData.reviewedBookings.map((booking) => booking.id);
+    setSettingsSaved("");
+    window.print();
+  }
+
   const menuItems: MenuItem[] = [
     { label: copy.menuHome, href: "/admin", icon: "home", view: "dashboard" },
     { label: copy.menuProgram, href: "/admin/bookings", icon: "report" },
@@ -715,6 +803,10 @@ export default function AdminPage() {
     <RoleGate allow={["admin"]}>
       <div className={cls("min-h-screen bg-[radial-gradient(circle_at_top,#eff6ff_0%,#f8fafc_40%,#f8fafc_100%)] px-3 py-4 text-slate-900 sm:px-4 lg:px-6", darkMode && "admin-dark")}>
         <style jsx global>{`
+          .admin-report-sheet {
+            display: none;
+          }
+
           .admin-dark {
             background: radial-gradient(circle at top, #0f172a 0%, #020617 46%, #020617 100%) !important;
             color: #e2e8f0;
@@ -758,6 +850,70 @@ export default function AdminPage() {
 
           .admin-dark [class*="shadow"] {
             box-shadow: 0 28px 80px -55px rgba(0, 0, 0, 0.9) !important;
+          }
+
+          @media print {
+            @page {
+              size: A4 portrait;
+              margin: 12mm;
+            }
+
+            body {
+              background: white !important;
+            }
+
+            aside,
+            .admin-page-topbar,
+            .admin-page-dashboard,
+            .admin-page-settings,
+            .admin-page-error,
+            .admin-page-meta,
+            .admin-report-actions {
+              display: none !important;
+            }
+
+            .admin-print-shell {
+              display: block !important;
+              border: none !important;
+              box-shadow: none !important;
+              background: white !important;
+              max-width: 100% !important;
+              padding: 0 !important;
+            }
+
+            .admin-report-print {
+              margin: 0 !important;
+            }
+
+            .admin-report-live {
+              display: none !important;
+            }
+
+            .admin-report-sheet {
+              display: block !important;
+              width: 100%;
+              max-width: 100%;
+              color: #0f172a !important;
+            }
+
+            .admin-report-sheet * {
+              color: inherit !important;
+              box-shadow: none !important;
+            }
+
+            .admin-report-card {
+              break-inside: avoid;
+              page-break-inside: avoid;
+            }
+
+            .admin-report-table {
+              border-collapse: collapse;
+            }
+
+            .admin-report-table th,
+            .admin-report-table td {
+              border: 1px solid #d8ccff;
+            }
           }
         `}</style>
         <div className="mx-auto flex min-h-[calc(100vh-2rem)] max-w-[1450px] gap-4">
@@ -841,8 +997,8 @@ export default function AdminPage() {
             </div>
           </aside>
 
-          <main className="flex-1 rounded-[2rem] border border-slate-200 bg-white/95 p-4 shadow-[0_28px_70px_-42px_rgba(15,23,42,0.25)] backdrop-blur sm:p-6 lg:p-7">
-            <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-5">
+          <main className="admin-print-shell flex-1 rounded-[2rem] border border-slate-200 bg-white/95 p-4 shadow-[0_28px_70px_-42px_rgba(15,23,42,0.25)] backdrop-blur sm:p-6 lg:p-7">
+            <div className="admin-page-topbar flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-5">
               <div>
                 <div className="text-3xl font-black tracking-tight text-slate-950">
                   {activeView === "reports" ? copy.reportTitle : activeView === "settings" ? copy.settingsTitle : copy.dashboardTitle}
@@ -875,13 +1031,150 @@ export default function AdminPage() {
             </div>
 
             {error ? (
-              <div className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              <div className="admin-page-error mt-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
                 {error}
               </div>
             ) : null}
 
             {activeView === "reports" ? (
-              <div className="mt-8 grid gap-6">
+              <div className="admin-report-print mt-8 grid gap-6">
+                <div className="admin-report-sheet">
+                  <section className="rounded-[1.9rem] border border-violet-200 bg-white px-8 py-8">
+                    <div className="flex items-start justify-between gap-6 border-b border-violet-200 pb-6">
+                      <div className="flex items-center gap-4">
+                        <div className="relative h-16 w-16 overflow-hidden rounded-3xl ring-1 ring-violet-100">
+                          <Image src="/logo2.png" alt="Logo Diabstrok" fill sizes="64px" className="object-cover" />
+                        </div>
+                        <div>
+                          <div className="text-[1.05rem] font-black tracking-tight">DIABSTROK</div>
+                          <div className="text-sm text-slate-500">{copy.adminDashboard}</div>
+                        </div>
+                      </div>
+
+                      <div className="flex-1 text-center">
+                        <div className="text-[2.15rem] font-black uppercase tracking-tight text-slate-950">
+                          {copy.financeReport}
+                        </div>
+                      </div>
+
+                      <div className="min-w-[220px] space-y-2 text-right text-sm">
+                        <div>
+                          {copy.printDate}:{" "}
+                          <span className="font-black text-violet-600">{formatDateLabel(new Date())}</span>
+                        </div>
+                        <div>
+                          {copy.period}:{" "}
+                          <span className="font-black text-violet-600">{formatPeriodLabel(new Date())}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <section className="admin-report-card mt-7">
+                      <div className="flex items-start gap-4">
+                        <ReportIcon tone="violet" kind="trend" />
+                        <div>
+                          <div className="text-[1.1rem] font-black text-slate-950">{copy.financialSummary}</div>
+                          <div className="mt-1 text-sm text-slate-500">{copy.financialSummaryDesc}</div>
+                        </div>
+                      </div>
+
+                      <div className="mt-6 grid grid-cols-4 gap-4">
+                        {reportMetricCards.map((card) => (
+                          <div
+                            key={`print_${card.label}`}
+                            className="rounded-[1.4rem] border border-slate-200 bg-white px-5 py-5 shadow-[0_16px_36px_-28px_rgba(15,23,42,0.24)]"
+                          >
+                            <div className="flex items-center gap-4">
+                              <ReportIcon tone={card.tone} kind={card.icon} />
+                              <div>
+                                <div className="text-[0.78rem] font-bold text-slate-500">{card.label}</div>
+                                <div className="mt-4 text-[1rem] font-black text-slate-950">{card.value}</div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+
+                    <section className="admin-report-card mt-7">
+                      <div className="flex items-start gap-4">
+                        <ReportIcon tone="violet" kind="bottle" />
+                        <div>
+                          <div className="text-[1.1rem] font-black text-slate-950">{copy.soldMedicineList}</div>
+                          <div className="mt-1 text-sm text-slate-500">{copy.soldMedicineDesc}</div>
+                        </div>
+                      </div>
+
+                      <div className="mt-5 overflow-hidden rounded-[1.3rem] border border-violet-200">
+                        <table className="admin-report-table min-w-full text-sm">
+                          <thead className="bg-violet-50/80">
+                            <tr className="text-violet-700">
+                              <th className="px-5 py-4 text-left font-black">{copy.medicineName}</th>
+                              <th className="px-5 py-4 text-center font-black">{copy.price}</th>
+                              <th className="px-5 py-4 text-center font-black">{copy.soldQty}</th>
+                              <th className="px-5 py-4 text-center font-black">{copy.total}</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {printReportRows.map((medicine) => (
+                              <tr key={`print_row_${medicine.name}`} className="bg-white">
+                                <td className="px-5 py-4">{medicine.name}</td>
+                                <td className="px-5 py-4 text-center">{medicine.price ? formatRupiah(medicine.price) : "-"}</td>
+                                <td className="px-5 py-4 text-center">{medicine.count}</td>
+                                <td className="px-5 py-4 text-center font-bold">{medicine.total ? formatRupiah(medicine.total) : "-"}</td>
+                              </tr>
+                            ))}
+                            <tr className="bg-violet-50/70 font-black text-violet-700">
+                              <td className="px-5 py-4">{copy.grandTotal}</td>
+                              <td className="px-5 py-4 text-center">-</td>
+                              <td className="px-5 py-4 text-center">{reportData.soldMedicineCount}</td>
+                              <td className="px-5 py-4 text-center">{formatRupiah(reportData.soldMedicines.reduce((sum, item) => sum + item.total, 0))}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+
+                    <section className="admin-report-card mt-6 rounded-[1.4rem] border border-violet-200 bg-white px-5 py-5">
+                      <div className="flex items-start gap-4">
+                        <ReportIcon tone="violet" kind="wallet" />
+                        <div>
+                          <div className="text-[1.05rem] font-black">{copy.notesTitle}</div>
+                          <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-slate-600">
+                            <li>{copy.notesLineOne}</li>
+                            <li>{copy.notesLineTwo}</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </section>
+
+                    <section className="admin-report-card mt-6 rounded-[1.4rem] border border-violet-200 bg-white px-5 py-5">
+                      <div className="flex items-start gap-4">
+                        <ReportIcon tone="violet" kind="bag" />
+                        <div className="w-full">
+                          <div className="text-[1.05rem] font-black">{copy.adminSignature}</div>
+                          <div className="mt-6 flex justify-center">
+                            <div className="min-w-[320px] border-b-2 border-violet-200 pb-2 text-center">
+                              <div className="text-5xl italic text-slate-900" style={{ fontFamily: "cursive" }}>
+                                {profileName || viewer?.name || "Admin"}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="mt-2 text-center text-lg font-black">
+                            {profileName || viewer?.name || "Admin Diabstrok"}
+                          </div>
+                        </div>
+                      </div>
+                    </section>
+
+                    <div className="mt-8 flex items-center justify-between border-t border-violet-200 pt-5 text-sm text-slate-500">
+                      <div>{copy.documentFooter}</div>
+                      <div>{copy.pageLabel}</div>
+                    </div>
+                  </section>
+                </div>
+
+                <div className="admin-report-live grid gap-6">
                 <section className="rounded-[1.7rem] border border-slate-200 bg-white px-7 py-8 shadow-[0_28px_80px_-52px_rgba(15,23,42,0.28)]">
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div className="flex items-start gap-4">
@@ -891,15 +1184,36 @@ export default function AdminPage() {
                         <div className="mt-2 text-base font-medium text-slate-500">
                           {copy.financeReportDesc}
                         </div>
+                        <div className="admin-page-meta mt-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                          {copy.reportArchiveNote}
+                        </div>
                       </div>
                     </div>
 
+                    <div className="admin-report-actions flex flex-wrap items-center justify-end gap-3">
+                      {settingsSaved ? (
+                        <div className="rounded-full bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-700">
+                          {settingsSaved}
+                        </div>
+                      ) : null}
+                      <button
+                        type="button"
+                        onClick={handlePrintReport}
+                        className="rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-3 text-sm font-black text-white shadow-[0_18px_40px_-22px_rgba(124,58,237,0.65)] transition hover:brightness-105"
+                      >
+                        {copy.printAndClean}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
                     <div className="text-center">
                       <div className="rounded-full bg-emerald-50 px-8 py-3 text-xl font-black text-emerald-700">
                         {formatRupiah(reportData.totalRevenue)}
                       </div>
                       <div className="mt-2 text-sm font-medium text-slate-500">{copy.totalRevenue}</div>
                     </div>
+                    <div className="text-sm font-semibold text-slate-400">{formatDateLabel(new Date())}</div>
                   </div>
 
                   <div className="mt-9 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
@@ -977,7 +1291,7 @@ export default function AdminPage() {
                         {!loading && reportData.soldMedicines.length === 0 ? (
                           <tr>
                             <td colSpan={4} className="rounded-[1.2rem] border border-dashed border-slate-200 bg-slate-50 px-5 py-6 text-sm text-slate-500">
-                              {copy.noSoldMedicine}
+                              {clearedReportBookingIds.length ? copy.reportEmptyAfterPrint : copy.noSoldMedicine}
                             </td>
                           </tr>
                         ) : null}
@@ -985,11 +1299,12 @@ export default function AdminPage() {
                     </table>
                   </div>
                 </section>
+                </div>
               </div>
             ) : null}
 
             {activeView === "settings" ? (
-              <div className="mt-8 grid gap-6">
+              <div className="admin-page-settings mt-8 grid gap-6">
                 {/* Area akun diletakkan paling atas supaya admin langsung melihat status login dan tombol logout. */}
                 <section className="rounded-[1.8rem] border border-slate-200 bg-white p-6 shadow-[0_28px_80px_-52px_rgba(15,23,42,0.28)]">
                   <div className="flex flex-wrap items-center justify-between gap-4">
@@ -1158,7 +1473,7 @@ export default function AdminPage() {
               </div>
             ) : null}
 
-            <div className={activeView !== "dashboard" ? "hidden" : ""}>
+            <div className={cls("admin-page-dashboard", activeView !== "dashboard" ? "hidden" : "")}>
             <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               {metricCards.map((card) => (
                 <section

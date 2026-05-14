@@ -2,12 +2,19 @@
 
 // Halaman booking milik user.
 // User melihat riwayat booking sendiri, mengubah status, atau menghapus booking lewat endpoint backend.
+import { PaymentSimulationModal } from "@/app/components/PaymentSimulationModal";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/app/components/Navbar";
 import { useToast } from "@/app/components/Toast";
 import { api } from "@/app/lib/api";
 import { getUser } from "@/app/lib/auth";
+import {
+  getPaymentSimulation,
+  savePendingPaymentSimulation,
+  uploadPaymentSimulationProof,
+  type PaymentSimulationRecord,
+} from "@/app/lib/payment-simulation";
 import { bookingStatusLabel, stageLabel, type Booking, type BookingStatus } from "@/app/lib/types";
 
 function cls(...parts: Array<string | false | null | undefined>) {
@@ -47,6 +54,7 @@ export default function MyBookingsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [q, setQ] = useState("");
+  const [paymentDraft, setPaymentDraft] = useState<PaymentSimulationRecord | null>(null);
 
   async function reload() {
     // Ambil data booking milik user yang sedang login.
@@ -118,11 +126,62 @@ export default function MyBookingsPage() {
     }
   }
 
+  function openPayment(booking: Booking) {
+    // Jika booking belum punya draft pembayaran, buat otomatis dari data booking yang ada.
+    setPaymentDraft(getPaymentSimulation(booking.id) || savePendingPaymentSimulation(booking));
+  }
+
+  function refreshPaymentStatus() {
+    if (!paymentDraft) return;
+    setPaymentDraft(getPaymentSimulation(paymentDraft.bookingId));
+  }
+
+  function uploadProof(booking: Booking, file: File) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === "string" ? reader.result : "";
+      if (!result) return;
+
+      uploadPaymentSimulationProof(booking.id, result);
+      setItems((current) => [...current]);
+      showToast({
+        tone: "success",
+        title: "Bukti bayar terkirim",
+        description: "Admin sekarang bisa melihat gambar bukti bayar dari browser ini.",
+      });
+    };
+
+    reader.readAsDataURL(file);
+  }
+
   if (!ready) return null;
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <Navbar />
+      <PaymentSimulationModal
+        open={Boolean(paymentDraft)}
+        title="Pembayaran Simulasi QR"
+        subtitle="Scan QR payment demo ini lalu konfirmasi pembayaran. Data pembayaran hanya disimpan di browser untuk kebutuhan presentasi."
+        pendingText={
+          paymentDraft?.status === "verified"
+            ? "Sudah diverifikasi admin"
+            : paymentDraft?.status === "proof_uploaded"
+            ? "Bukti menunggu verifikasi admin"
+            : "Menunggu bukti pembayaran"
+        }
+        confirmText={paymentDraft?.status === "verified" ? "Sudah terkonfirmasi" : "Refresh status"}
+        laterText="Tutup"
+        summaryLabels={{
+          hospital: "Rumah sakit",
+          doctor: "Dokter",
+          room: "Ruangan",
+          total: "Total simulasi",
+        }}
+        payment={paymentDraft}
+        onClose={() => setPaymentDraft(null)}
+        onConfirm={refreshPaymentStatus}
+      />
 
       <div className="relative">
         <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[360px] overflow-hidden">
@@ -214,6 +273,30 @@ export default function MyBookingsPage() {
                       Status: {bookingStatusLabel(booking.status)}
                     </div>
 
+                    {(() => {
+                      const payment = getPaymentSimulation(booking.id);
+                      if (!payment) return null;
+
+                      return (
+                        <div
+                          className={cls(
+                            "rounded-xl px-3 py-2 text-xs font-semibold",
+                            payment.status === "verified"
+                              ? "border border-emerald-200 bg-emerald-50 text-emerald-700"
+                              : payment.status === "proof_uploaded"
+                              ? "border border-cyan-200 bg-cyan-50 text-cyan-700"
+                              : "border border-violet-200 bg-violet-50 text-violet-700"
+                          )}
+                        >
+                          {payment.status === "verified"
+                            ? "Pembayaran Diverifikasi Admin"
+                            : payment.status === "proof_uploaded"
+                            ? "Bukti Bayar Menunggu Verifikasi"
+                            : "Menunggu Bukti Pembayaran"}
+                        </div>
+                      );
+                    })()}
+
                     <button
                       onClick={() => remove(booking.id)}
                       className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-100"
@@ -245,6 +328,55 @@ export default function MyBookingsPage() {
                   <div className="sm:col-span-12 rounded-2xl border border-slate-100 bg-slate-50 p-4">
                     <div className="text-xs font-semibold text-slate-500">Keluhan singkat</div>
                     <div className="mt-1 text-sm font-semibold text-slate-800">{booking.complaint}</div>
+                  </div>
+
+                  <div className="sm:col-span-12 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <div className="text-xs font-semibold text-slate-500">Pembayaran Simulasi</div>
+                        <div className="mt-1 text-sm text-slate-700">
+                          {getPaymentSimulation(booking.id)?.status === "verified"
+                            ? "Pembayaran sudah diverifikasi admin dan booking bisa diteruskan ke dokter."
+                            : getPaymentSimulation(booking.id)?.status === "proof_uploaded"
+                            ? "Bukti pembayaran sudah terkirim. Menunggu verifikasi admin."
+                            : "Upload foto bukti bayar agar admin bisa meneruskan booking ke dokter."}
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          onClick={() => openPayment(booking)}
+                          className="rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-xs font-semibold text-violet-700 transition hover:bg-violet-100"
+                        >
+                          {getPaymentSimulation(booking.id)?.status === "verified" ? "Lihat pembayaran" : "Buka QR pembayaran"}
+                        </button>
+                        <label className="cursor-pointer rounded-xl border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs font-semibold text-cyan-700 transition hover:bg-cyan-100">
+                          Upload bukti bayar
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(event) => {
+                              const file = event.target.files?.[0];
+                              if (file) {
+                                uploadProof(booking, file);
+                              }
+                              event.currentTarget.value = "";
+                            }}
+                          />
+                        </label>
+                      </div>
+                    </div>
+                    {getPaymentSimulation(booking.id)?.proofImage ? (
+                      <div className="mt-4">
+                        <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Preview bukti bayar</div>
+                        {/* Bukti disimpan di browser agar demo terasa seperti alur pembayaran nyata. */}
+                        <img
+                          src={getPaymentSimulation(booking.id)?.proofImage}
+                          alt="Bukti bayar booking"
+                          className="mt-2 h-40 rounded-2xl border border-slate-200 bg-white object-cover"
+                        />
+                      </div>
+                    ) : null}
                   </div>
 
                   {booking.prescription ? (

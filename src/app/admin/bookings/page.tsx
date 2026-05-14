@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { RoleGate } from "@/app/components/RoleGate";
 import { useToast } from "@/app/components/Toast";
 import { api } from "@/app/lib/api";
+import { confirmPaymentSimulation, getPaymentSimulation } from "@/app/lib/payment-simulation";
 import { useSessionPreferences } from "@/app/lib/use-preferences";
 import { type Booking, type BookingStatus } from "@/app/lib/types";
 
@@ -36,6 +37,8 @@ const adminBookingsCopy = {
     emptyTitle: "Belum ada booking",
     emptyDesc: "Coba buat booking dari halaman `/hospitals`",
     sendDoctor: "Kirim ke Dokter",
+    verifyPayment: "Verifikasi Pembayaran",
+    waitingPayment: "Menunggu Bukti Bayar",
     completeCase: "Selesaikan Kasus",
     delete: "Hapus",
     patient: "Pasien",
@@ -45,6 +48,11 @@ const adminBookingsCopy = {
     room: "Ruangan",
     specialty: "Spesialis",
     complaint: "Keluhan singkat",
+    paymentProof: "Bukti pembayaran",
+    paymentPending: "User belum mengirim bukti pembayaran.",
+    paymentWaitingAdmin: "Bukti pembayaran sudah dikirim dan menunggu verifikasi admin.",
+    paymentVerified: "Pembayaran sudah diverifikasi admin. Booking boleh diteruskan ke dokter.",
+    uploadTime: "Waktu upload",
     notSent: "Admin belum mengirim booking ini ke dokter.",
     waitingReview: "Booking sudah dikirim ke dokter. Menunggu hasil pemeriksaan.",
     noReview: "Belum ada hasil review dokter.",
@@ -65,6 +73,8 @@ const adminBookingsCopy = {
     loadError: "Gagal memuat booking admin",
     loadErrorTitle: "Gagal memuat data admin",
     statusUpdated: "Status booking diperbarui",
+    paymentVerifiedTitle: "Pembayaran diverifikasi",
+    paymentVerifiedDesc: "Admin sekarang bisa meneruskan booking ke dokter.",
     sentDesc: "Booking sudah dikirim ke dokter yang dipilih.",
     completedDesc: "Kasus sudah ditutup oleh admin.",
     updateError: "Gagal mengubah status booking",
@@ -88,6 +98,8 @@ const adminBookingsCopy = {
     emptyTitle: "No bookings yet",
     emptyDesc: "Try creating a booking from the `/hospitals` page",
     sendDoctor: "Send to Doctor",
+    verifyPayment: "Verify Payment",
+    waitingPayment: "Waiting for Payment Proof",
     completeCase: "Complete Case",
     delete: "Delete",
     patient: "Patient",
@@ -97,6 +109,11 @@ const adminBookingsCopy = {
     room: "Room",
     specialty: "Specialty",
     complaint: "Short complaint",
+    paymentProof: "Payment proof",
+    paymentPending: "The user has not uploaded payment proof yet.",
+    paymentWaitingAdmin: "Payment proof has been uploaded and is waiting for admin verification.",
+    paymentVerified: "Payment has been verified by admin. The booking can now be sent to the doctor.",
+    uploadTime: "Uploaded at",
     notSent: "Admin has not sent this booking to the doctor.",
     waitingReview: "Booking has been sent to the doctor. Waiting for examination result.",
     noReview: "No doctor review yet.",
@@ -117,6 +134,8 @@ const adminBookingsCopy = {
     loadError: "Failed to load admin bookings",
     loadErrorTitle: "Failed to load admin data",
     statusUpdated: "Booking status updated",
+    paymentVerifiedTitle: "Payment verified",
+    paymentVerifiedDesc: "Admin can now forward the booking to the doctor.",
     sentDesc: "Booking has been sent to the selected doctor.",
     completedDesc: "The case has been closed by admin.",
     updateError: "Failed to update booking status",
@@ -243,6 +262,16 @@ export default function AdminBookingsPage() {
     }
   }
 
+  function verifyPayment(bookingId: string) {
+    confirmPaymentSimulation(bookingId);
+    setItems((current) => [...current]);
+    showToast({
+      tone: "success",
+      title: copy.paymentVerifiedTitle,
+      description: copy.paymentVerifiedDesc,
+    });
+  }
+
   if (!ready) return null;
 
   const pendingCount = items.filter((item) => item.status === "PENDING").length;
@@ -325,7 +354,8 @@ export default function AdminBookingsPage() {
             ) : null}
 
             {filtered.map((booking) => {
-              const canSendToDoctor = booking.status === "PENDING";
+              const payment = getPaymentSimulation(booking.id);
+              const canSendToDoctor = booking.status === "PENDING" && payment?.status === "verified";
               const canComplete = booking.status === "REVIEWED_BY_DOCTOR";
 
               return (
@@ -345,12 +375,28 @@ export default function AdminBookingsPage() {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
+                      {booking.status === "PENDING" && payment?.status === "proof_uploaded" ? (
+                        <button
+                          onClick={() => verifyPayment(booking.id)}
+                          className="rounded-xl border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs font-semibold text-cyan-700 hover:bg-cyan-100"
+                        >
+                          {copy.verifyPayment}
+                        </button>
+                      ) : null}
+
                       {canSendToDoctor ? (
                         <button
                           onClick={() => setStatus(booking.id, "CONFIRMED")}
                           className="rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-100"
                         >
                           {copy.sendDoctor}
+                        </button>
+                      ) : booking.status === "PENDING" ? (
+                        <button
+                          disabled
+                          className="cursor-not-allowed rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-500"
+                        >
+                          {copy.waitingPayment}
                         </button>
                       ) : null}
 
@@ -396,6 +442,34 @@ export default function AdminBookingsPage() {
                     <div className="sm:col-span-12 rounded-2xl border border-slate-100 bg-slate-50 p-4">
                       <div className="text-xs font-semibold text-slate-500">{copy.complaint}</div>
                       <div className="mt-1 text-sm font-semibold text-slate-800">{booking.complaint}</div>
+                    </div>
+
+                    <div className="sm:col-span-12 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                      <div className="text-xs font-semibold text-slate-500">{copy.paymentProof}</div>
+                      <div className="mt-2 text-sm text-slate-700">
+                        {payment?.status === "verified"
+                          ? copy.paymentVerified
+                          : payment?.status === "proof_uploaded"
+                          ? copy.paymentWaitingAdmin
+                          : copy.paymentPending}
+                      </div>
+
+                      {payment?.proofUploadedAt ? (
+                        <div className="mt-2 text-xs text-slate-500">
+                          {copy.uploadTime}: {fmtDateTime(payment.proofUploadedAt)}
+                        </div>
+                      ) : null}
+
+                      {payment?.proofImage ? (
+                        <div className="mt-4">
+                          {/* Admin membaca gambar bukti langsung dari browser untuk simulasi proses verifikasi. */}
+                          <img
+                            src={payment.proofImage}
+                            alt="Bukti pembayaran user"
+                            className="h-52 rounded-2xl border border-slate-200 bg-white object-cover"
+                          />
+                        </div>
+                      ) : null}
                     </div>
 
                     {!booking.doctorReview ? (
