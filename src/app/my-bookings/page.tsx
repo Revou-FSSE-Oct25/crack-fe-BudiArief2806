@@ -162,7 +162,7 @@ export default function MyBookingsPage() {
       <PaymentSimulationModal
         open={Boolean(paymentDraft)}
         title="Pembayaran Simulasi QR"
-        subtitle="Scan QR payment demo ini lalu konfirmasi pembayaran. Data pembayaran hanya disimpan di browser untuk kebutuhan presentasi."
+        subtitle="Gunakan QR ini sebagai simulasi pembayaran, lalu unggah bukti agar admin bisa memverifikasi booking Anda."
         pendingText={
           paymentDraft?.status === "verified"
             ? "Sudah diverifikasi admin"

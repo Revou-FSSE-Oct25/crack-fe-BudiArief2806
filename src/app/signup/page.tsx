@@ -21,6 +21,7 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
   const [done, setDone] = useState(false);
+  const [verificationHint, setVerificationHint] = useState("");
 
   const form = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
@@ -37,18 +38,32 @@ export default function SignupPage() {
     // Reset state UI sebelum request baru dikirim.
     setErr("");
     setDone(false);
+    setVerificationHint("");
     setLoading(true);
 
     try {
       // Register selalu dikirim ke backend, bukan disimpan ke localStorage.
-      await api.register(values);
+      const result = await api.register(values);
       setDone(true);
+      const verificationUrl = result.verificationUrl;
+      const nextPath =
+        verificationUrl && typeof window !== "undefined"
+          ? verificationUrl.replace(window.location.origin, "")
+          : "/verify-email";
+      setVerificationHint("Akun berhasil dibuat. Silakan verifikasi email sebelum login.");
       showToast({
         tone: "success",
         title: "Akun berhasil dibuat",
-        description: "Lanjut login untuk masuk ke dashboard.",
+        description: "Silakan verifikasi email lebih dulu sebelum login.",
       });
-      setTimeout(() => router.push("/signin"), 600);
+      setTimeout(() => {
+        if (verificationUrl && typeof window !== "undefined") {
+          window.location.assign(verificationUrl);
+          return;
+        }
+
+        router.push(nextPath);
+      }, 800);
     } catch (error: any) {
       const message = error?.message || "Register gagal";
       setErr(message);
@@ -100,7 +115,7 @@ export default function SignupPage() {
 
             {done ? (
               <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-                Akun berhasil dibuat. Mengarahkan ke halaman Sign In.
+                {verificationHint || "Akun berhasil dibuat. Mengarahkan ke halaman verifikasi email."}
               </div>
             ) : null}
 

@@ -19,6 +19,7 @@ import type {
   RegisterResponse,
   RoomRecord,
   UpdateBookingStatusRequest,
+  VerifyEmailResponse,
 } from "./types";
 
 const BASE = (process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3001").replace(/\/$/, "");
@@ -78,6 +79,15 @@ export const api = {
     request<RegisterResponse>("/auth/register", {
       method: "POST",
       body: JSON.stringify(body),
+    }),
+
+  verifyEmailToken: (token: string) =>
+    request<VerifyEmailResponse>(`/auth/verify-email?token=${encodeURIComponent(token)}`),
+
+  googleLogin: (idToken: string) =>
+    request<LoginResponse>("/auth/google", {
+      method: "POST",
+      body: JSON.stringify({ idToken }),
     }),
 
   me: () => request<AuthMeResponse>("/auth/me"),

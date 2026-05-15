@@ -147,7 +147,7 @@ const hospitalsCopy = {
     createError: "Gagal membuat booking",
     createErrorTitle: "Booking gagal",
     paymentTitle: "Pembayaran Simulasi QR",
-    paymentSubtitle: "Scan QR ini sebagai simulasi pembayaran booking rumah sakit. Setelah itu tekan tombol konfirmasi agar booking tercatat sudah dibayar.",
+    paymentSubtitle: "Scan QR ini sebagai simulasi pembayaran booking rumah sakit, lalu lanjutkan unggah bukti agar admin bisa memverifikasinya.",
     paymentPending: "Menunggu pembayaran",
     confirmPayment: "Lanjut upload bukti",
     payLater: "Nanti saja",

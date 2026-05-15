@@ -7,6 +7,8 @@ export type User = {
   name: string;
   email: string;
   role: Role;
+  emailVerified?: boolean;
+  googleId?: string;
   doctorId?: string;
 };
 
@@ -106,9 +108,16 @@ export type RegisterRequest = {
 
 export type RegisterResponse = {
   user: User;
+  requiresEmailVerification?: boolean;
+  verificationUrl?: string;
 };
 
 export type AuthMeResponse = {
+  user: User;
+};
+
+export type VerifyEmailResponse = {
+  verified: true;
   user: User;
 };
 
