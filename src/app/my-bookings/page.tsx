@@ -3,6 +3,7 @@
 // Halaman booking milik user.
 // User melihat riwayat booking sendiri, mengubah status, atau menghapus booking lewat endpoint backend.
 import { PaymentSimulationModal } from "@/app/components/PaymentSimulationModal";
+import { BookingChatPanel } from "@/app/components/BookingChatPanel";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/app/components/Navbar";
@@ -15,6 +16,7 @@ import {
   uploadPaymentSimulationProof,
   type PaymentSimulationRecord,
 } from "@/app/lib/payment-simulation";
+import { subscribeBookingRealtime } from "@/app/lib/realtime";
 import { bookingStatusLabel, stageLabel, type Booking, type BookingStatus } from "@/app/lib/types";
 
 function cls(...parts: Array<string | false | null | undefined>) {
@@ -84,6 +86,14 @@ export default function MyBookingsPage() {
     setReady(true);
     reload();
   }, [router]);
+
+  useEffect(() => {
+    if (!ready) return;
+
+    return subscribeBookingRealtime(() => {
+      void reload();
+    });
+  }, [ready]);
 
   const filtered = useMemo(() => {
     const keyword = q.trim().toLowerCase();
@@ -427,6 +437,8 @@ export default function MyBookingsPage() {
                     </div>
                   ) : null}
                 </div>
+
+                <BookingChatPanel booking={booking} title="Chat dengan Admin / Dokter" />
               </div>
             ))}
           </div>

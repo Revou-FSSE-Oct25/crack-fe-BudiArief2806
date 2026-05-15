@@ -4,9 +4,11 @@
 // Dokter mengirim diagnosis, biaya, resep, dan saran kesehatan kembali ke admin.
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { BookingChatPanel } from "@/app/components/BookingChatPanel";
 import { RoleGate } from "@/app/components/RoleGate";
 import { useToast } from "@/app/components/Toast";
 import { api } from "@/app/lib/api";
+import { subscribeBookingRealtime } from "@/app/lib/realtime";
 import { createDoctorReviewSchema } from "@/app/lib/schemas";
 import { getPrescriptionTemplate, type Booking, type BookingStatus, type DiseaseStage } from "@/app/lib/types";
 
@@ -97,6 +99,14 @@ export default function DoctorBookingsPage() {
     setReady(true);
     reload();
   }, []);
+
+  useEffect(() => {
+    if (!ready) return;
+
+    return subscribeBookingRealtime(() => {
+      void reload();
+    });
+  }, [ready]);
 
   const filtered = useMemo(() => {
     const keyword = q.trim().toLowerCase();
@@ -549,6 +559,8 @@ export default function DoctorBookingsPage() {
                       </div>
                     </div>
                   ) : null}
+
+                  <BookingChatPanel booking={booking} title="Chat Dokter / Admin / Pasien" />
                 </div>
               );
             })}

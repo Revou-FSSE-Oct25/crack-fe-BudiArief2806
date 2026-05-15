@@ -8,6 +8,8 @@ import type {
   ApiListResponse,
   AuthMeResponse,
   Booking,
+  BookingMessage,
+  CreateBookingMessageRequest,
   CreateBookingRequest,
   CreateDoctorReviewRequest,
   CreatePrescriptionRequest,
@@ -111,6 +113,12 @@ export const api = {
   getMyBookings: () => request<ApiListResponse<Booking>>("/bookings/me"),
   getBookings: () => request<ApiListResponse<Booking>>("/bookings"),
   getBooking: (id: string) => request<ApiItemResponse<Booking>>(`/bookings/${id}`),
+  getBookingMessages: (id: string) => request<ApiListResponse<BookingMessage>>(`/bookings/${id}/messages`),
+  createBookingMessage: (id: string, body: CreateBookingMessageRequest) =>
+    request<ApiItemResponse<BookingMessage>>(`/bookings/${id}/messages`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
 
   updateBookingStatus: (id: string, body: UpdateBookingStatusRequest) =>
     request<ApiItemResponse<Booking>>(`/bookings/${id}/status`, {

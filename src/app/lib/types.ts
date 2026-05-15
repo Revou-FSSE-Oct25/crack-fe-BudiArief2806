@@ -64,6 +64,18 @@ export type DoctorReview = {
   createdBy: "doctor";
 };
 
+export type BookingMessage = {
+  id: string;
+  bookingId: string;
+  senderUserId: string;
+  senderRole: Role;
+  senderName: string;
+  senderEmail: string;
+  message: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type Booking = {
   id: string;
   userId?: string | null;
@@ -148,6 +160,10 @@ export type CreateDoctorReviewRequest = {
   stage: DiseaseStage;
   items: string[];
   notes: string;
+};
+
+export type CreateBookingMessageRequest = {
+  message: string;
 };
 
 export type ApiListResponse<T> = {

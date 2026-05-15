@@ -5,8 +5,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { RoleGate } from "@/app/components/RoleGate";
+import { BookingChatPanel } from "@/app/components/BookingChatPanel";
 import { useToast } from "@/app/components/Toast";
 import { api } from "@/app/lib/api";
+import { subscribeBookingRealtime } from "@/app/lib/realtime";
 import { confirmPaymentSimulation, getPaymentSimulation } from "@/app/lib/payment-simulation";
 import { useSessionPreferences } from "@/app/lib/use-preferences";
 import { type Booking, type BookingStatus } from "@/app/lib/types";
@@ -197,6 +199,14 @@ export default function AdminBookingsPage() {
     setReady(true);
     reload();
   }, []);
+
+  useEffect(() => {
+    if (!ready) return;
+
+    return subscribeBookingRealtime(() => {
+      void reload();
+    });
+  }, [ready]);
 
   const filtered = useMemo(() => {
     const keyword = q.trim().toLowerCase();
@@ -528,6 +538,8 @@ export default function AdminBookingsPage() {
                       </div>
                     ) : null}
                   </div>
+
+                  <BookingChatPanel booking={booking} title="Chat Admin / Pasien / Dokter" />
                 </div>
               );
             })}
