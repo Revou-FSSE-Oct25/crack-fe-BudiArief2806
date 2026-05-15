@@ -4,6 +4,7 @@
 // Halaman ini menarik ringkasan booking milik user dari backend dan menampilkan statistik cepat.
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { HealthAssistantPanel } from "@/app/components/HealthAssistantPanel";
 import { Navbar } from "@/app/components/Navbar";
 import { RoleGate } from "@/app/components/RoleGate";
 import { getUser, updateSessionUser } from "@/app/lib/auth";
@@ -42,6 +43,7 @@ const dashboardCopy = {
     lightModeOn: "Mode terang aktif",
     saveSettings: "Simpan Profil",
     settingsSaved: "Profil user berhasil disimpan.",
+    assistantTitle: "Assistant edukasi hanya tersedia untuk akun user.",
   },
   en: {
     title: "Dashboard",
@@ -72,6 +74,7 @@ const dashboardCopy = {
     lightModeOn: "Light mode active",
     saveSettings: "Save Profile",
     settingsSaved: "User profile saved successfully.",
+    assistantTitle: "Educational assistant is available for user accounts only.",
   },
 };
 
@@ -358,6 +361,8 @@ export default function DashboardPage() {
                 ) : null}
               </div>
             </div>
+
+            {viewer?.role === "user" ? <HealthAssistantPanel language={language} /> : null}
           </div>
         </main>
       </RoleGate>

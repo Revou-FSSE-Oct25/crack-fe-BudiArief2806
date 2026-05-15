@@ -76,6 +76,18 @@ export type BookingMessage = {
   updatedAt: string;
 };
 
+export type HealthAssistantMessageRole = "user" | "assistant";
+
+export type HealthAssistantMessage = {
+  id: string;
+  userId: string;
+  role: HealthAssistantMessageRole;
+  message: string;
+  topic?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type Booking = {
   id: string;
   userId?: string | null;
@@ -164,6 +176,15 @@ export type CreateDoctorReviewRequest = {
 
 export type CreateBookingMessageRequest = {
   message: string;
+};
+
+export type AskHealthAssistantRequest = {
+  message: string;
+};
+
+export type AskHealthAssistantResponse = {
+  userMessage: HealthAssistantMessage;
+  assistantMessage: HealthAssistantMessage;
 };
 
 export type ApiListResponse<T> = {

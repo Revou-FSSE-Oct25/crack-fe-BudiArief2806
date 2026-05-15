@@ -7,6 +7,8 @@ import type {
   ApiItemResponse,
   ApiListResponse,
   AuthMeResponse,
+  AskHealthAssistantRequest,
+  AskHealthAssistantResponse,
   Booking,
   BookingMessage,
   CreateBookingMessageRequest,
@@ -22,6 +24,7 @@ import type {
   RoomRecord,
   UpdateBookingStatusRequest,
   VerifyEmailResponse,
+  HealthAssistantMessage,
 } from "./types";
 
 const BASE = (process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3001").replace(/\/$/, "");
@@ -116,6 +119,13 @@ export const api = {
   getBookingMessages: (id: string) => request<ApiListResponse<BookingMessage>>(`/bookings/${id}/messages`),
   createBookingMessage: (id: string, body: CreateBookingMessageRequest) =>
     request<ApiItemResponse<BookingMessage>>(`/bookings/${id}/messages`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  getHealthAssistantMessages: () =>
+    request<ApiListResponse<HealthAssistantMessage>>("/health-assistant/messages"),
+  askHealthAssistant: (body: AskHealthAssistantRequest) =>
+    request<AskHealthAssistantResponse>("/health-assistant/messages", {
       method: "POST",
       body: JSON.stringify(body),
     }),
