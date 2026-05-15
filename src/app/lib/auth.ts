@@ -10,6 +10,7 @@ const ROLE_KEY = "crack_role";
 const USER_KEY = "crack_user";
 const TOKEN_COOKIE = "diabstrok_token";
 const ROLE_COOKIE = "diabstrok_role";
+export const SESSION_USER_CHANGED_EVENT = "diabstrok:session-user-changed";
 
 function isBrowser() {
   return typeof window !== "undefined";
@@ -45,6 +46,11 @@ export function saveSession(payload: { token: string; role: Role; user: User }) 
   localStorage.setItem(TOKEN_KEY, payload.token);
   localStorage.setItem(ROLE_KEY, payload.role);
   localStorage.setItem(USER_KEY, JSON.stringify(sessionUser));
+  window.dispatchEvent(
+    new CustomEvent(SESSION_USER_CHANGED_EVENT, {
+      detail: { user: sessionUser },
+    }),
+  );
   writeCookie(TOKEN_COOKIE, payload.token, 60 * 60 * 8);
   writeCookie(ROLE_COOKIE, payload.role, 60 * 60 * 8);
   applyPreferences(readUserPreferences(sessionUser));
@@ -56,6 +62,11 @@ export function clearSession() {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(ROLE_KEY);
   localStorage.removeItem(USER_KEY);
+  window.dispatchEvent(
+    new CustomEvent(SESSION_USER_CHANGED_EVENT, {
+      detail: { user: null },
+    }),
+  );
   clearCookie(TOKEN_COOKIE);
   clearCookie(ROLE_COOKIE);
   applyPreferences(null);
@@ -97,4 +108,29 @@ export function getUser(): User | null {
   } catch {
     return null;
   }
+}
+
+export function updateSessionUser(patch: Partial<User>): User | null {
+  if (!isBrowser()) return null;
+
+  const currentUser = getUser();
+  if (!currentUser) return null;
+
+  const nextUser: User = {
+    ...currentUser,
+    ...patch,
+    id: patch.id || currentUser.id,
+    name: patch.name || currentUser.name,
+    email: patch.email || currentUser.email,
+    role: patch.role || currentUser.role,
+  };
+
+  localStorage.setItem(USER_KEY, JSON.stringify(nextUser));
+  window.dispatchEvent(
+    new CustomEvent(SESSION_USER_CHANGED_EVENT, {
+      detail: { user: nextUser },
+    }),
+  );
+  applyPreferences(readUserPreferences(nextUser));
+  return nextUser;
 }

@@ -14,6 +14,7 @@ export type UserPreferences = {
 };
 
 const PREFERENCE_PREFIX = "diabstrok_preferences";
+export const PREFERENCES_CHANGED_EVENT = "diabstrok:preferences-changed";
 
 function isBrowser() {
   return typeof window !== "undefined";
@@ -79,6 +80,11 @@ export function readUserPreferences(user: User | null): UserPreferences | null {
 export function saveUserPreferences(user: User, preferences: UserPreferences) {
   if (!isBrowser()) return;
   localStorage.setItem(preferenceKey(user), JSON.stringify(preferences));
+  window.dispatchEvent(
+    new CustomEvent(PREFERENCES_CHANGED_EVENT, {
+      detail: { user, preferences },
+    }),
+  );
 }
 
 export function applyPreferences(preferences: Pick<UserPreferences, "darkMode" | "language"> | null) {

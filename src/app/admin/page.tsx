@@ -754,29 +754,6 @@ export default function AdminPage() {
     setSettingsSaved(copy.settingsSaved);
   }
 
-  function persistPreferencePatch(patch: Partial<UserPreferences>) {
-    if (!viewer) return;
-
-    // Ambil preferensi terakhir dari storage agar klik cepat bahasa/tema tidak saling menimpa.
-    const latest = readUserPreferences(viewer) || {
-      name: profileName,
-      email: profileEmail,
-      phone: profilePhone,
-      darkMode,
-      language,
-    };
-    const nextPreferences = {
-      ...latest,
-      name: profileName,
-      email: profileEmail,
-      phone: profilePhone,
-      ...patch,
-    };
-
-    saveUserPreferences(viewer, nextPreferences);
-    applyPreferences(nextPreferences);
-  }
-
   function handlePrintReport() {
     if (!reportData.reviewedBookings.length) {
       setSettingsSaved(copy.nothingToPrint);
@@ -1405,11 +1382,7 @@ export default function AdminPage() {
                         <button
                           type="button"
                           onClick={() => {
-                            setDarkMode((value) => {
-                              const nextValue = !value;
-                              persistPreferencePatch({ darkMode: nextValue });
-                              return nextValue;
-                            });
+                            setDarkMode((value) => !value);
                           }}
                           className={cls(
                             "mt-4 flex w-full items-center justify-between rounded-2xl px-4 py-3 text-sm font-black transition",
@@ -1432,7 +1405,6 @@ export default function AdminPage() {
                           <button
                             type="button"
                             onClick={() => {
-                              persistPreferencePatch({ language: "id" });
                               setLanguage("id");
                               setSettingsSaved("");
                             }}
@@ -1446,7 +1418,6 @@ export default function AdminPage() {
                           <button
                             type="button"
                             onClick={() => {
-                              persistPreferencePatch({ language: "en" });
                               setLanguage("en");
                               setSettingsSaved("");
                             }}

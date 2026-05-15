@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { clearSession, getRole, getUser } from "@/app/lib/auth";
+import { clearSession, getRole, getUser, SESSION_USER_CHANGED_EVENT } from "@/app/lib/auth";
 import { useSessionPreferences } from "@/app/lib/use-preferences";
 
 type NavItem = {
@@ -83,15 +83,28 @@ export function Navbar() {
   const [activeSection, setActiveSection] = useState("top");
 
   useEffect(() => {
-    const currentRole = getRole();
-    const currentUser = getUser();
-    const maybeName =
-      currentUser && typeof (currentUser as { name?: unknown }).name === "string"
-        ? ((currentUser as { name?: string }).name ?? "")
-        : "";
+    function syncSessionUser() {
+      const currentRole = getRole();
+      const currentUser = getUser();
+      const maybeName =
+        currentUser && typeof (currentUser as { name?: unknown }).name === "string"
+          ? ((currentUser as { name?: string }).name ?? "")
+          : "";
 
-    setRole(currentRole);
-    setName(maybeName);
+      setRole(currentRole);
+      setName(maybeName);
+    }
+
+    syncSessionUser();
+
+    function handleSessionChange() {
+      syncSessionUser();
+    }
+
+    window.addEventListener(SESSION_USER_CHANGED_EVENT, handleSessionChange);
+    return () => {
+      window.removeEventListener(SESSION_USER_CHANGED_EVENT, handleSessionChange);
+    };
   }, [path]);
 
   useEffect(() => {
