@@ -3,6 +3,7 @@
 Frontend Next.js untuk sistem booking layanan diabetes dan stroke. Aplikasi ini terhubung ke backend NestJS sebagai sumber data utama untuk auth, master data rumah sakit, dokter, ruangan, dan booking.
 
 ## Halaman utama
+<img width="1907" height="989" alt="image" src="https://github.com/user-attachments/assets/a7a2e8d6-547f-47ea-9042-99ea484d0086" />
 
 - `/`
 - `/signin`
@@ -16,8 +17,11 @@ Frontend Next.js untuk sistem booking layanan diabetes dan stroke. Aplikasi ini 
 - `/admin`
 - `/admin/bookings`
 
-## Fitur yang sudah dicakup
 
+## ERD 
+<img width="692" height="1222" alt="Diagram Tanpa Judul drawio" src="https://github.com/user-attachments/assets/f03847ac-95c4-43b4-a287-354fda549de4" />
+
+## Fitur yang sudah dicakup
 - Global styling system dan reusable UI components
 - Login/register dengan validasi form
 - Cookie-backed route protection via Next middleware
